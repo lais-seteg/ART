@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SGART Seteg – Sistema de Solicitação de ART</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- ✅ CDN Obrigatória do Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">
+          <img src="images/LOGO.png" alt="Logo SETEG" onerror="this.style.display='none'">
+        </div>
+        <h1>Sistema de Solicitação de ART</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-login-header" data-login-type="admin">👔 Gestor</button>
+        <button class="btn btn-ghost btn-login-header" data-login-type="financeiro">💰 Financeiro</button>
+        <button class="btn btn-ghost btn-login-header" data-login-type="tecnico">🔧 Técnico</button>
+        <div id="userInfo" class="hidden">
+          <span class="user-badge" id="userBadge"></span>
+          <button class="btn btn-ghost-sm" onclick="logout()">Sair</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-content">
+
+    <!-- Card Nova Solicitação (oculto para perfis logados) -->
+    <div class="nova-solicitacao-card" data-restrito="true">
+      <div class="card-header">
+        <h2>📝 Nova Solicitação de ART</h2>
+        <button class="btn btn-primary" id="btnNovaSolicitacao" type="button">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span id="btnToggleText">Nova Solicitação</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulário Tela Cheia (oculto para perfis logados) -->
+    <div class="form-container" id="formContainer" data-restrito="true">
+      <form id="artForm" novalidate>
+        <div class="form-header">
+          <h2>📋 Nova Solicitação de ART</h2>
+          <div class="form-actions-group">
+            <button type="button" class="btn btn-voltar" onclick="fecharFormulario()">← Voltar</button>
+          </div>
+        </div>
+
+        <div class="form-type-selector">
+          <label for="tipoSolicitacao" class="form-label required">Tipo de Solicitação</label>
+          <select id="tipoSolicitacao" class="form-control" required>
+            <option value="">Selecione o conselho</option>
+            <option value="CREA">CREA – Conselho Regional de Engenharia e Agronomia do Ceará</option>
+            <option value="CRBio">CRBio – Conselho Regiona de Biologia</option>
+          </select>
+        </div>
+
+        <!-- FORMULÁRIO CREA -->
+        <div id="formCREA" class="form-panel hidden">
+          <div class="form-section-block">
+            <h4 class="form-subtitle">👤 Dados do Solicitante</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Nome do Solicitante</label>
+                <input type="text" id="solicitanteCREA" class="form-control" name="solicitante" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Data da Solicitação</label>
+                <input type="date" id="dataSolicitacaoCREA" class="form-control" name="dataSolicitacao" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Departamento</label>
+                <input type="text" id="departamentoCREA" class="form-control" name="departamento" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">📋 Informações do Projeto</h4>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label required">Nome do Empreendimento</label>
+                <input type="text" id="nomeEmpreendimentoCREA" class="form-control" name="nomeEmpreendimento" required placeholder="Digite o nome do empreendimento">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Código do Clockfy</label>
+                <input type="text" id="codigoClockfyCREA" class="form-control" name="codigoClockfy" required placeholder="Ex: #0001-1">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">🔧 Informações do Técnico</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Nome do Técnico</label>
+                <input type="text" id="nomeTecnicoCREA" class="form-control" name="nomeTecnico" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Estado</label>
+                <select id="estadoCREA" class="form-control" name="estado" required>
+                  <option value="">UF</option>
+                  <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+                  <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+                  <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+                  <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+                  <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+                  <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+                  <option>SP</option><option>SE</option><option>TO</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">📋 Informações para Emissão da ART</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Nome do Contratante</label>
+                <input type="text" id="contratanteCREA" class="form-control" name="contratante" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">CNPJ</label>
+                <input type="text" id="cnpjCREA" class="form-control mask-cnpj" name="cnpj" required placeholder="00.000.000/0000-00">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">E-mail</label>
+                <input type="email" id="emailCREA" class="form-control" name="email" required placeholder="email@exemplo.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Contato</label>
+                <input type="text" id="contatoCREA" class="form-control mask-phone" name="contato" required placeholder="(00) 00000-0000">
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Endereço</label>
+                <input type="text" id="enderecoCREA" class="form-control" name="endereco" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Bairro</label>
+                <input type="text" id="bairroCREA" class="form-control" name="bairro" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">CEP</label>
+                <input type="text" id="cepCREA" class="form-control mask-cep" name="cep" required placeholder="00000-000">
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Endereço da Obra</label>
+                <input type="text" id="enderecoObraCREA" class="form-control" name="enderecoObra" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Bairro da Obra</label>
+                <input type="text" id="bairroObraCREA" class="form-control" name="bairroObra" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">CEP da Obra</label>
+                <input type="text" id="cepObraCREA" class="form-control mask-cep" name="cepObra" required placeholder="00000-000">
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Coordenadas</label>
+                <div class="form-row-inline">
+                  <div class="form-group-inline">
+                    <label class="form-label-sm required">Latitude</label>
+                    <input type="text" id="latitudeCREA" class="form-control" name="latitude" placeholder="-00.0000000" required>
+                  </div>
+                  <div class="form-group-inline">
+                    <label class="form-label-sm required">Longitude</label>
+                    <input type="text" id="longitudeCREA" class="form-control" name="longitude" placeholder="-00.0000000" required>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">🛠️ Atividades CREA</h4>
+            <div id="atividadesCREAContainer"></div>
+            <button type="button" class="btn btn-ghost-outline" id="btnAddAtividadeCREA">+ Adicionar Atividade</button>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">📅 Prazo, Valor e Equipe</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Data de Início do Projeto</label>
+                <input type="date" id="dataInicioCREA" class="form-control" name="dataInicio" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Data do Fim do Projeto</label>
+                <input type="date" id="dataFimCREA" class="form-control" name="dataFim" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Prazo Para Emissão da ART</label>
+                <input type="date" id="prazoEmissaoArtCREA" class="form-control" name="prazoEmissaoArt" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Horas</label>
+                <input type="number" id="qtdHorasCREA" class="form-control" name="qtdHoras" required min="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Valor (R$)</label>
+                <input type="text" id="valorCREA" class="form-control mask-currency" name="valor" required placeholder="R$ 0,00">
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Equipe</label>
+                <textarea id="equipeCREA" class="form-control" name="equipe" rows="2" required placeholder="Nomes da equipe"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">📁 Arquivos Finais</h4>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label required">Local do Boleto/ART/Documentos</label>
+                <input type="text" id="diretorioArquivoCREA" class="form-control" name="diretorioArquivo" required placeholder="Z:\servidor\arts\2026\boleto.pdf">
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Observações sobre documentos</label>
+                <input type="text" id="obsDocumentosCREA" class="form-control" name="obsDocumentos" required placeholder="Informações sobre documentos">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">💬 Observações</h4>
+            <textarea id="observacoesCREA" class="form-control" name="observacoes" rows="3" required placeholder="Informações adicionais..."></textarea>
+          </div>
+
+          <div class="form-actions-row">
+            <button type="submit" class="btn btn-primary btn-lg"> Enviar Solicitação</button>
+            <button type="reset" class="btn btn-ghost-outline btn-lg">🗑 Limpar</button>
+          </div>
+        </div>
+
+        <!-- FORMULÁRIO CRBio -->
+        <div id="formCRBio" class="form-panel hidden">
+          <div class="form-section-block">
+            <h4 class="form-subtitle">👤 Dados do Solicitante</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Nome do Solicitante</label>
+                <input type="text" id="solicitanteCRBio" class="form-control" name="solicitante" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Data da Solicitação</label>
+                <input type="date" id="dataSolicitacaoCRBio" class="form-control" name="dataSolicitacao" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Departamento</label>
+                <input type="text" id="departamentoCRBio" class="form-control" name="departamento" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">📋 Informações do Projeto</h4>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label required">Nome do Empreendimento</label>
+                <input type="text" id="nomeEmpreendimentoCRBio" class="form-control" name="nomeEmpreendimento" required placeholder="Digite o nome do empreendimento">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Código do Clockfy</label>
+                <input type="text" id="codigoClockfyCRBio" class="form-control" name="codigoClockfy" required placeholder="Ex: #0001-1">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">🔧 Informações do Técnico</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Nome do Técnico</label>
+                <input type="text" id="nomeTecnicoCRBio" class="form-control" name="nomeTecnico" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Estado</label>
+                <select id="estadoCRBio" class="form-control" name="estado" required>
+                  <option value="">UF</option>
+                  <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+                  <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+                  <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+                  <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+                  <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+                  <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+                  <option>SP</option><option>SE</option><option>TO</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">🔗 Vínculo ACMB</h4>
+            <div class="form-group">
+              <label class="form-label required">Vinculado a ACMB?</label>
+              <div class="radio-group">
+                <label><input type="radio" name="vinculadoACMB" value="sim" required> Sim</label>
+                <label><input type="radio" name="vinculadoACMB" value="nao" required> Não</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">📋 Informações para Emissão da ART</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Nome do Contratante</label>
+                <input type="text" id="contratanteCRBio" class="form-control" name="contratante" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">CNPJ</label>
+                <input type="text" id="cnpjCRBio" class="form-control mask-cnpj" name="cnpj" required placeholder="00.000.000/0000-00">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">E-mail</label>
+                <input type="email" id="emailCRBio" class="form-control" name="email" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Contato</label>
+                <input type="text" id="contatoCRBio" class="form-control mask-phone" name="contato" required>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Endereço</label>
+                <input type="text" id="enderecoCRBio" class="form-control" name="endereco" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Bairro</label>
+                <input type="text" id="bairroCRBio" class="form-control" name="bairro" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">CEP</label>
+                <input type="text" id="cepCRBio" class="form-control mask-cep" name="cep" required>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Endereço da Obra</label>
+                <input type="text" id="enderecoObraCRBio" class="form-control" name="enderecoObra" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Bairro da Obra</label>
+                <input type="text" id="bairroObraCRBio" class="form-control" name="bairroObra" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">CEP da Obra</label>
+                <input type="text" id="cepObraCRBio" class="form-control mask-cep" name="cepObra" required>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Identificação</label>
+                <input type="text" id="identificacaoCRBio" class="form-control" name="identificacao" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Localidade</label>
+                <input type="text" id="localidadeCRBio" class="form-control" name="localidade" required>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Descrição Sumária</label>
+                <textarea id="descricaoSumariaCRBio" class="form-control" name="descricaoSumaria" rows="3" required></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Formato de Execução</label>
+                <select id="formatoExecucaoCRBio" class="form-control" name="formatoExecucao" required>
+                  <option value="">Selecione</option>
+                  <option>Presencial</option><option>Remoto</option><option>Híbrido</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Meio Ambiente e Biodiversidade</label>
+                <select id="meioAmbienteCRBio" class="form-control" name="meioAmbiente" required>
+                  <option value="">Selecione</option>
+                  <option>Sim</option><option>Não</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">📅 Prazo, Valor e Equipe</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label required">Data do Início do Projeto </label>
+                <input type="date" id="dataInicioCRBio" class="form-control" name="dataInicio" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Data do Fim do Projeto </label>
+                <input type="date" id="dataFimCRBio" class="form-control" name="dataFim" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Prazo Para Emissão da Art </label>
+                <input type="date" id="prazoEmissaoArtCRBio" class="form-control" name="prazoEmissaoArt" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Horas</label>
+                <input type="number" id="qtdHorasCRBio" class="form-control" name="qtdHoras" required min="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Valor (R$)</label>
+                <input type="text" id="valorCRBio" class="form-control mask-currency" name="valor" required placeholder="R$ 0,00">
+              </div>
+              <div class="form-group">
+                <label class="form-label required">Formato</label>
+                <select id="formatoCRBio" class="form-control" name="formato" required>
+                  <option value="">Selecione</option>
+                  <option>Presencial</option><option>Remoto</option><option>Híbrido</option>
+                </select>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Equipe</label>
+                <textarea id="equipeCRBio" class="form-control" name="equipe" rows="2" required></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">📁 Arquivos Finais</h4>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label required">Local do Boleto/ART</label>
+                <input type="text" id="diretorioArquivoCRBio" class="form-control" name="diretorioArquivo" required>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label required">Observações sobre documentos</label>
+                <input type="text" id="obsDocumentosCRBio" class="form-control" name="obsDocumentos" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">💬 Observações</h4>
+            <textarea id="observacoesCRBio" class="form-control" name="observacoes" rows="3" required></textarea>
+          </div>
+
+          <div class="form-actions-row">
+            <button type="submit" class="btn btn-primary btn-lg"> Enviar Solicitação</button>
+            <button type="reset" class="btn btn-ghost-outline btn-lg">🗑 Limpar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Grid Principal: Tabela + KPIs -->
+    <div class="dashboard-layout">
+      
+      <!-- TABELA -->
+      <div class="dashboard-table-area">
+        <div class="table-section-header">
+          <h2>Todas as Solicitações</h2>
+          <div class="filter-pills">
+            <button class="filter-pill active" data-status="todas">Todas</button>
+            <button class="filter-pill" data-status="Na fila">Na Fila</button>
+            <button class="filter-pill" data-status="Processando">Em Andamento</button>
+            <button class="filter-pill" data-status="Ajuste Pendente">Ajuste Pendente</button>
+            <button class="filter-pill" data-status="Pagamento Programado">Pagamento Prog.</button>
+            <button class="filter-pill" data-status="Pago">Pago</button>
+            <button class="filter-pill" data-status="Finalizado">Finalizado</button>
+            <button class="filter-pill" data-status="Baixa Solicitada">Baixa Solicitada</button>
+            <button class="filter-pill" data-status="Baixa da ART">Baixa da ART</button>
+          </div>
+        </div>
+
+        <div class="table-filters-row">
+          <div class="filter-group">
+            <select class="form-control filter-select" id="filterConselho">
+              <option value="">Conselho</option>
+              <option value="CREA">CREA</option>
+              <option value="CRBio">CRBio</option>
+            </select>
+            <select class="form-control filter-select" id="filterSetor">
+              <option value="">Setor</option>
+            </select>
+          </div>
+          <div class="search-group">
+            <input type="text" class="form-control search-input" id="searchInput" placeholder="🔍 Buscar solicitante, contratante, técnico ou ID...">
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <div class="table-scroll">
+            <table class="art-table" id="artTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Conselho</th>
+                  <th>Solicitante</th>
+                  <th>Setor</th>
+                  <th>Contratante</th>
+                  <th>Prazo</th>
+                  <th>Status</th>
+                  <th>Técnico</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="artTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-empty" id="tableEmpty">
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <p>Nenhuma solicitação encontrada.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pagination-container" id="paginationContainer">
+          <div class="pagination-info" id="paginationInfo"></div>
+          <div class="pagination-controls">
+            <button class="btn-pagination" id="btnFirst">⏮</button>
+            <button class="btn-pagination" id="btnPrev">◀</button>
+            <div class="pagination-numbers" id="paginationNumbers"></div>
+            <button class="btn-pagination" id="btnNext">▶</button>
+            <button class="btn-pagination" id="btnLast">⏭</button>
+          </div>
+          <div class="pagination-per-page">
+            <label>Por página:</label>
+            <select id="perPage">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs LATERAL DIREITA -->
+      <aside class="kpi-sidebar">
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-total">
+            <span class="kpi-label">Total de Solicitações</span>
+            <span class="kpi-value" id="kpiTotal">0</span>
+          </div>
+          <div class="kpi-card kpi-fila">
+            <span class="kpi-label">Na Fila</span>
+            <span class="kpi-value" id="kpiFila">0</span>
+          </div>
+          <div class="kpi-card kpi-processando">
+            <span class="kpi-label">Processando</span>
+            <span class="kpi-value" id="kpiProcessando">0</span>
+          </div>
+          <div class="kpi-card kpi-ajuste">
+            <span class="kpi-label">Ajuste Pendente</span>
+            <span class="kpi-value" id="kpiAjuste">0</span>
+          </div>
+          <div class="kpi-card kpi-pagamento">
+            <span class="kpi-label">Pagamento Programado</span>
+            <span class="kpi-value" id="kpiPagamento">0</span>
+          </div>
+          <div class="kpi-card kpi-pago">
+            <span class="kpi-label">Pago</span>
+            <span class="kpi-value" id="kpiPago">0</span>
+          </div>
+          <div class="kpi-card kpi-finalizado">
+            <span class="kpi-label">Finalizado</span>
+            <span class="kpi-value" id="kpiFinalizado">0</span>
+          </div>
+          <div class="kpi-card kpi-baixa">
+            <span class="kpi-label">Baixa da ART</span>
+            <span class="kpi-value" id="kpiBaixa">0</span>
+          </div>
+        </div>
+        
+        <!-- ✅ NOVO: Notificações para Financeiro -->
+        <div id="notificacoesFinanceiro" class="hidden" style="margin-top: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <span style="font-size: 1.2rem;">🔔</span>
+            <strong>Pagamentos Pendentes</strong>
+            <span id="badgePagamentosPendentes" class="status-badge status-pagamento" style="margin-left: auto; min-width: 24px; text-align: center;">0</span>
+          </div>
+          <div id="listaPagamentosPendentes" style="font-size: 0.85rem; color: var(--text-secondary); max-height: 150px; overflow-y: auto;"></div>
+        </div>
+        
+        <div class="status-legend">
+          <h4>Legenda de Status</h4>
+          <div class="legend-items-wrapper">
+            <div class="legend-item"><span class="status-badge status-na-fila">NA FILA</span><span>Aguardando atribuição</span></div>
+            <div class="legend-item"><span class="status-badge status-processando">EM ANDAMENTO</span><span>Em produção</span></div>
+            <div class="legend-item"><span class="status-badge status-ajuste">AJUSTE PENDENTE</span><span>Solicitante pediu ajuste</span></div>
+            <div class="legend-item"><span class="status-badge status-pagamento">PAGAMENTO PROG.</span><span>Aguardando pagamento</span></div>
+            <div class="legend-item"><span class="status-badge status-pago">PAGO</span><span>Pagamento confirmado</span></div>
+            <div class="legend-item"><span class="status-badge status-finalizado">FINALIZADO</span><span>Pronto para entrega</span></div>
+            <div class="legend-item"><span class="status-badge status-baixa-solicitada">BAIXA SOLICITADA</span><span>Aguardando confirmação</span></div>
+            <div class="legend-item"><span class="status-badge status-baixa-art">BAIXA DA ART</span><span>ART encerrada</span></div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    <footer class="app-footer">
+      <span>Versão 1.0.0 • © Seteg – Soluções Geológicas e Ambientais • 2026</span>
+    </footer>
+  </div>
+
+<!-- MODAL DE LOGIN -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 id="loginModalTitle">Acesso Restrito</h2>
+      <button class="modal-close" onclick="fecharModalLogin(event)" type="button">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="loginTipoTexto" class="login-info">Digite a senha para acessar</p>
+      
+      <div class="form-group hidden" id="campoSelecionarTecnico">
+        <label class="form-label">Selecione seu nome</label>
+        <select id="selectTecnico" class="form-control">
+          <option value="">Selecione...</option>
+          <option value="Henrique Silva">Henrique Silva</option>
+          <option value="Carla Dyane">Carla Dyane</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <div style="position: relative;">
+          <input type="password" id="senhaAcesso" class="form-control" placeholder="Digite sua senha" style="padding-right: 40px;">
+          <button type="button" onclick="toggleSenha()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1.1rem;">
+            👁️
+          </button>
+        </div>
+      </div>
+      
+      <p id="loginError" class="error-msg hidden">Senha incorreta.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalLogin(event)">Cancelar</button>
+      <button class="btn btn-primary" onclick="fazerLogin()">Acessar</button>
+    </div>
+  </div>
+</div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 id="modalTitle">Detalhes</h2>
+        <button class="modal-close" onclick="fecharModal(event)" type="button">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editModalOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 id="editModalTitle">Atribuir Técnico</h2>
+        <button class="modal-close" onclick="fecharEditModal(event)" type="button">&times;</button>
+      </div>
+      <div class="modal-body" id="editModalBody"></div>
+      <div class="modal-footer" id="editModalFooter"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="statusModalOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 id="statusModalTitle">Alterar Status</h2>
+        <button class="modal-close" onclick="fecharStatusModal(event)" type="button">&times;</button>
+      </div>
+      <div class="modal-body" id="statusModalBody"></div>
+      <div class="modal-footer" id="statusModalFooter"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="ajusteModalOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 id="ajusteModalTitle">Solicitar Ajuste</h2>
+        <button class="modal-close" onclick="fecharAjusteModal(event)" type="button">&times;</button>
+      </div>
+      <div class="modal-body" id="ajusteModalBody"></div>
+      <div class="modal-footer" id="ajusteModalFooter"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="baixaModalOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 id="baixaModalTitle">Solicitar Baixa da ART</h2>
+        <button class="modal-close" onclick="fecharBaixaModal(event)" type="button">&times;</button>
+      </div>
+      <div class="modal-body" id="baixaModalBody"></div>
+      <div class="modal-footer" id="baixaModalFooter"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
