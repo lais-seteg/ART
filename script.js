@@ -147,6 +147,11 @@ function getStatusClass(s) {
   return m[s] || 'status-na-fila';
 }
 
+// ✅ NOVO: Helper para exibição formatada do status
+function formatarStatusExibicao(s) {
+  return s === 'Pagamento Programado' ? 'Encaminhado para o Financeiro' : s;
+}
+
 // ✅ ATUALIZADO: Permissões com status permitidos e flag de atribuição
 function getPermissoes() {
   if (!AppState.usuarioAtual) {
@@ -737,6 +742,10 @@ function coletarDadosFormulario(tipo) {
   p.querySelectorAll('.form-control').forEach(i => {
     if (!i.name) return;
     let v = i.value.trim();
+    // ✅ Remove prefixo # dos campos Clockfy antes de salvar
+    if (i.name === 'codigoClockfy' && typeof v === 'string') {
+      v = v.replace(/^#+/, '');
+    }
     if (i.classList.contains('mask-currency')) {
       try {
         v = parseFloat(v.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
@@ -928,7 +937,7 @@ function renderTableRow(s, perms) {
     <td>${sf(s.departamento)}</td>
     <td>${sf(s.contratante)}</td>
     <td>${formatarDataBR(s.prazoEmissaoArt)}</td>
-    <td><span class="status-badge ${sc}">${sf(s.status)}</span></td>
+    <td><span class="status-badge ${sc}">${sf(formatarStatusExibicao(s.status))}</span></td>
     <td>${sf(s.tecnico_responsavel || '—')}</td>
     <td><div class="table-actions">${a}</div></td>
   `;
@@ -1053,7 +1062,7 @@ async function verDetalhes(id) {
       <div class="detail-item"><span class="detail-label">Solicitante</span><span class="detail-value">${sf(s.solicitante)}</span></div>
       <div class="detail-item"><span class="detail-label">Data Solicitação</span><span class="detail-value">${formatarDataBR(s.dataSolicitacao)}</span></div>
       <div class="detail-item"><span class="detail-label">Departamento</span><span class="detail-value">${sf(s.departamento)}</span></div>
-      <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value"><span class="status-badge ${getStatusClass(s.status)}">${sf(s.status)}</span></span></div>
+      <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value"><span class="status-badge ${getStatusClass(s.status)}">${sf(formatarStatusExibicao(s.status))}</span></span></div>
     </div>
     
     <div class="detail-section-title">📋 Informações do Projeto</div>
@@ -1439,9 +1448,49 @@ async function salvarBaixa(id) {
   }
 }
 
-// ✅ NOVO: Função para técnico encaminhar ao financeiro
+// ========== MODAL DE CONFIRMAÇÃO CUSTOMIZADO ==========
+let confirmResolve = null;
+
+function confirmarAcao(mensagem, titulo = 'Confirmação') {
+  return new Promise((resolve) => {
+    confirmResolve = resolve;
+    const overlay = document.getElementById('confirmModalOverlay');
+    const titleEl = document.getElementById('confirmModalTitle');
+    const msgEl = document.getElementById('confirmModalMessage');
+    
+    if (titleEl) titleEl.textContent = titulo;
+    if (msgEl) msgEl.textContent = mensagem;
+    if (overlay) overlay.classList.add('active');
+  });
+}
+
+function fecharConfirmModal() {
+  const overlay = document.getElementById('confirmModalOverlay');
+  if (overlay) overlay.classList.remove('active');
+  if (confirmResolve) {
+    confirmResolve(false);
+    confirmResolve = null;
+  }
+}
+
+function confirmarAcaoOk() {
+  fecharConfirmModal();
+  if (confirmResolve) {
+    confirmResolve(true);
+    confirmResolve = null;
+  }
+}
+
+function confirmarAcaoCancel() {
+  fecharConfirmModal();
+}
+
+// ========== AÇÕES CRÍTICAS ==========
+
+// ✅ NOVO: Função para técnico encaminhar ao financeiro (COM MODAL CUSTOMIZADO)
 async function encaminharAoFinanceiro(id) {
-  if (!confirm('Encaminhar esta solicitação ao setor financeiro para pagamento?')) return;
+  const confirmou = await confirmarAcao('Encaminhar esta solicitação ao setor financeiro para pagamento?', 'Encaminhar ao Financeiro');
+  if (!confirmou) return;
   
   try {
     await atualizarSolicitacaoDB(id, { 
@@ -1460,7 +1509,8 @@ async function encaminharAoFinanceiro(id) {
 }
 
 async function excluirSolicitacao(id) {
-  if (!confirm('Tem certeza que deseja excluir esta solicitação?')) return;
+  const confirmou = await confirmarAcao('Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.', 'Excluir Solicitação');
+  if (!confirmou) return;
   
   if (!supabase) {
     showToast('⚠️ Supabase indisponível. Não é possível excluir.', 'error');
@@ -1553,6 +1603,7 @@ function configurarEventListeners() {
       fecharEditModal();
       fecharAjusteModal();
       fecharBaixaModal();
+      fecharConfirmModal(); // ✅ NOVO: Fechar modal de confirmação
     }
   });
   
@@ -1609,6 +1660,14 @@ function configurarEventListeners() {
     if (e.target === DOM.baixaModalOverlay) fecharBaixaModal();
   });
   
+  // ✅ NOVO: Fechar modal de confirmação ao clicar fora
+  const confirmOverlay = document.getElementById('confirmModalOverlay');
+  if (confirmOverlay) {
+    confirmOverlay.addEventListener('click', e => {
+      if (e.target === confirmOverlay) fecharConfirmModal();
+    });
+  }
+  
   DOM.btnFirst?.addEventListener('click', () => { AppState.paginaAtual = 1; renderizarTabela(); });
   DOM.btnPrev?.addEventListener('click', () => { if (AppState.paginaAtual > 1) { AppState.paginaAtual--; renderizarTabela(); } });
   DOM.btnNext?.addEventListener('click', () => { if (AppState.paginaAtual < AppState.totalPaginas) { AppState.paginaAtual++; renderizarTabela(); } });
@@ -1664,6 +1723,65 @@ function configurarMascaras() {
   });
 }
 
+// ========== UPPERCASE EM TEMPO REAL ==========
+function setupUppercaseInputs() {
+  // Seleciona inputs de texto que NÃO têm máscara e NÃO são tipos especiais
+  const inputs = document.querySelectorAll('input[type="text"].form-control:not(.mask-cnpj):not(.mask-phone):not(.mask-cep):not(.mask-currency)');
+  
+  inputs.forEach(input => {
+    input.addEventListener('input', function(e) {
+      const start = this.selectionStart;
+      const end = this.selectionEnd;
+      const value = this.value;
+      const upper = value.toUpperCase();
+      
+      if (value !== upper) {
+        this.value = upper;
+        this.setSelectionRange(start, end);
+      }
+    });
+  });
+}
+
+// ========== PREFIXO # PARA CLOCKFY ==========
+function setupClockfyPrefix() {
+  const clockfyFields = ['codigoClockfyCREA', 'codigoClockfyCRBio'];
+  
+  clockfyFields.forEach(id => {
+    const field = document.getElementById(id);
+    if (!field) return;
+    
+    // Placeholder visual com #
+    field.placeholder = '#0001-1';
+    
+    // Garante # no início ao focar se vazio
+    field.addEventListener('focus', function() {
+      if (this.value && !this.value.startsWith('#')) {
+        this.value = '#' + this.value;
+      }
+    });
+    
+    // Impede apagar o #
+    field.addEventListener('keydown', function(e) {
+      if (this.value.startsWith('#') && 
+          (e.key === 'Backspace' || e.key === 'Delete') && 
+          this.selectionStart <= 1 && this.selectionEnd <= 1) {
+        e.preventDefault();
+      }
+    });
+    
+    // Restaura # se removido acidentalmente
+    field.addEventListener('input', function() {
+      if (!this.value.startsWith('#') && this.value.length > 0) {
+        const cursor = this.selectionStart;
+        this.value = '#' + this.value.replace(/^#+/, '');
+        const newCursor = Math.max(1, cursor);
+        this.setSelectionRange(newCursor, newCursor);
+      }
+    });
+  });
+}
+
 // ========== TOAST ==========
 function showToast(msg, type = 'info') {
   const c = DOM.toastContainer;
@@ -1706,6 +1824,9 @@ window.verDetalhes = verDetalhes;
 window.consultarTabelaAtividades = consultarTabelaAtividades;
 window.toggleSenha = toggleSenha;
 window.encaminharAoFinanceiro = encaminharAoFinanceiro; // ✅ NOVO
+window.fecharConfirmModal = fecharConfirmModal;
+window.confirmarAcaoOk = confirmarAcaoOk;
+window.confirmarAcaoCancel = confirmarAcaoCancel;
 
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1724,6 +1845,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     configurarMascaras();
     console.log('✅ Máscaras configuradas');
+    
+    // ✅ NOVO: Setup de uppercase em tempo real
+    setupUppercaseInputs();
+    console.log('✅ Uppercase em tempo real configurado');
+    
+    // ✅ NOVO: Setup do prefixo # para Clockfy
+    setupClockfyPrefix();
+    console.log('✅ Prefixo Clockfy configurado');
     
     await carregarDados();
     console.log('✅ Dados carregados:', AppState.solicitacoes.length, 'solicitações');
