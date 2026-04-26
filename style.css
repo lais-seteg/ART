@@ -1,23 +1,34 @@
 :root {
-  --blue-dark: #071D49;
-  --blue: #2C5697;
-  --blue-light: #4A7BC8;
+  /* ✅ AZUIS REAJUSTADOS (Mais claros e visíveis) */
+  --blue-dark: #0A2459;
+  --blue: #3A65B0;           /* Mais vibrante */
+  --blue-light: #5A8DD0;     /* Mais claro para destaques */
+  
+  /* Mantendo a identidade das cores de status */
   --orange: #FF8200;
   --orange-hover: #e57400;
   --yellow: #FBE122;
   --green: #6CC24A;
   --green-dark: #4a9e30;
   --purple: #9b59b6;
-  --bg-primary: #060D1F;
-  --bg-secondary: #0B1630;
-  --bg-card: #0F1B3D;
-  --bg-card-hover: #152250;
-  --bg-input: #0D1730;
-  --border-color: #1A2D5E;
-  --border-light: #223A6E;
+  
+  /* ✅ FUNDOS CLAREADOS (Sai do preto, vai para azul marinho profundo) */
+  --bg-primary: #0C1835;     /* Era #060D1F */
+  --bg-secondary: #122045;   /* Era #0B1630 */
+  --bg-card: #162654;        /* Era #0F1B3D */
+  --bg-card-hover: #1D3066;  /* Era #152250 */
+  --bg-input: #122045;       /* Era #0D1730 */
+  
+  /* ✅ BORDAS MAIS VISÍVEIS */
+  --border-color: #264175;   /* Era #1A2D5E */
+  --border-light: #355696;   /* Era #223A6E */
+  
+  /* Textos (Mantidos ou levemente ajustados para contraste) */
   --text-primary: #E8ECF4;
   --text-secondary: #8A95B0;
   --text-muted: #7A85A0;
+  
+  /* Dimensões e Efeitos (Mantidos) */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -29,7 +40,6 @@
   --header-height: 60px;
   --footer-height: 36px;
 }
-
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { font-size: 15px; }
 
@@ -577,60 +587,84 @@ body::before {
 .kpi-finalizado .kpi-value { color: var(--green); }
 .kpi-baixa .kpi-value { color: var(--purple); }
 
-/* ========== LEGENDA ========== */
+/* ========== LEGENDA DE STATUS - CORREÇÃO HARMÔNICA ========== */
 .status-legend {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 1rem;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  padding: 1.2rem;
+  flex-shrink: 0;
+  margin-top: auto; /* ✅ Empurra para baixo na sidebar */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .status-legend h4 { 
-  font-size: 0.85rem; 
+  font-size: 0.9rem; 
   font-weight: 600; 
   color: #fff; 
-  margin-bottom: 1.5rem;
+  margin: 0 0 1.2rem 0;
   text-align: center; 
-  width: 100%;
   padding-bottom: 0.8rem;
   border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
 
 .legend-items-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1 1 0;
-  justify-content: space-between;
-  gap: 0;
+  gap: 0.8rem; /* ✅ Espaçamento confortável entre itens */
 }
 
 .legend-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 125px 1fr; /* ✅ Badge fixo + descrição flexível */
   align-items: center;
   gap: 0.8rem;
-  font-size: 0.68rem;
-  color: var(--text-secondary);
-  line-height: 1.3;
-  flex: 1;
-  justify-content: flex-start;
+  min-height: 28px; /* ✅ Altura mínima garantida */
 }
 
 .legend-item .status-badge {
-  flex-shrink: 0;
-  width: 115px;
+  justify-self: center;
+  width: 100%;
   text-align: center;
+  font-size: 0.65rem;
+  padding: 0.3rem 0.4rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 .legend-item span:last-child { 
-  text-align: left; 
-  color: var(--text-muted); 
-  font-size: 0.65rem; 
-  flex: 1;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  text-align: left;
+  word-wrap: break-word; /* ✅ Texto quebra se necessário */
+  overflow-wrap: break-word;
+}
+
+/* Remove qualquer scroll da legenda */
+.status-legend::-webkit-scrollbar { 
+  display: none; 
+}
+.status-legend {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Responsivo para telas menores */
+@media (max-width: 1100px) {
+  .legend-item {
+    grid-template-columns: 110px 1fr;
+    gap: 0.6rem;
+  }
+  .legend-item .status-badge {
+    font-size: 0.6rem;
+    padding: 0.25rem 0.3rem;
+  }
+  .legend-item span:last-child {
+    font-size: 0.68rem;
+  }
 }
 
 /* Scroll para legenda */
@@ -856,4 +890,50 @@ body::before {
   gap: 1rem;
 }
 
-/* ... restante do CSS permanece igual ... */
+/* ========== MODAL DE CONFIRMAÇÃO CUSTOMIZADO ========== */
+.confirm-modal {
+  max-width: 400px;
+  border: 1px solid var(--border-color);
+}
+
+.confirm-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1.3rem 1rem;
+}
+
+.confirm-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.8rem;
+  opacity: 0.9;
+}
+
+.confirm-modal-body p {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.confirm-modal-footer {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  padding: 0.9rem 1.4rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.confirm-modal-ok {
+  min-width: 100px;
+}
+
+.confirm-modal-ok:hover {
+  transform: translateY(-1px);
+}
+
+/* Animação de entrada */
+#confirmModalOverlay.active {
+  animation: fadeIn 0.2s ease;
+}
