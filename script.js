@@ -742,10 +742,7 @@ function coletarDadosFormulario(tipo) {
   p.querySelectorAll('.form-control').forEach(i => {
     if (!i.name) return;
     let v = i.value.trim();
-    // ✅ Remove prefixo # dos campos Clockfy antes de salvar
-    if (i.name === 'codigoClockfy' && typeof v === 'string') {
-      v = v.replace(/^#+/, '');
-    }
+    // ✅ # mantido no banco e na visualização
     if (i.classList.contains('mask-currency')) {
       try {
         v = parseFloat(v.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
@@ -1449,7 +1446,6 @@ async function salvarBaixa(id) {
 }
 
 // ========== MODAL DE CONFIRMAÇÃO CUSTOMIZADO ==========
-// ========== MODAL DE CONFIRMAÇÃO CUSTOMIZADO ==========
 let confirmResolve = null;
 
 function confirmarAcao(mensagem, titulo = 'Confirmação') {
@@ -1476,7 +1472,7 @@ function fecharConfirmModal() {
 }
 
 function confirmarAcaoOk() {
-  // ✅ Resolve como TRUE ANTES de fechar a UI
+  // ✅ Resolve como TRUE ANTES de fechar a UI (Bug corrigido)
   if (confirmResolve) {
     const res = confirmResolve;
     confirmResolve = null;
@@ -1488,6 +1484,7 @@ function confirmarAcaoOk() {
 function confirmarAcaoCancel() {
   fecharConfirmModal(); // Já resolve como false e fecha UI
 }
+
 // ========== AÇÕES CRÍTICAS ==========
 
 // ✅ NOVO: Função para técnico encaminhar ao financeiro (COM MODAL CUSTOMIZADO)
@@ -1529,26 +1526,14 @@ async function excluirSolicitacao(id) {
   console.log('🔄 Executando DELETE no Supabase...');
   
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('solicitacoes')
       .delete()
-      .eq('solicitacao_id', id)
-      .select(); // ✅ Adiciona .select() para retornar dados e melhor debug
+      .eq('solicitacao_id', id);
     
-    console.log('📦 Resposta do Supabase:', { data, error });
+    if (error) throw error;
     
-    if (error) {
-      console.error('❌ Erro do Supabase:', error);
-      throw error;
-    }
-    
-    if (!data || data.length === 0) {
-      console.warn('⚠️ Nenhum registro foi excluído. Verifique RLS ou ID.');
-      showToast('Nenhuma solicitação foi encontrada para exclusão.', 'error');
-      return;
-    }
-    
-    console.log('✅ Exclusão bem-sucedida:', data[0]);
+    console.log('✅ Exclusão bem-sucedida:', id);
     showToast('Solicitação excluída!', 'success');
     
     AppState.solicitacoes = await carregarSolicitacoesDB();
@@ -1558,7 +1543,6 @@ async function excluirSolicitacao(id) {
   } catch(e) {
     console.error('💥 Erro ao excluir:', e);
     
-    // Mensagem mais informativa baseada no erro
     if (e.message?.includes('row-level security')) {
       showToast('❌ Permissão negada: verifique as políticas RLS no Supabase.', 'error');
     } else if (e.message?.includes('permission denied')) {
@@ -1759,7 +1743,6 @@ function configurarMascaras() {
 
 // ========== UPPERCASE EM TEMPO REAL ==========
 function setupUppercaseInputs() {
-  // Seleciona inputs de texto que NÃO têm máscara e NÃO são tipos especiais
   const inputs = document.querySelectorAll('input[type="text"].form-control:not(.mask-cnpj):not(.mask-phone):not(.mask-cep):not(.mask-currency)');
   
   inputs.forEach(input => {
@@ -1785,17 +1768,14 @@ function setupClockfyPrefix() {
     const field = document.getElementById(id);
     if (!field) return;
     
-    // Placeholder visual com #
     field.placeholder = '#0001-1';
     
-    // Garante # no início ao focar se vazio
     field.addEventListener('focus', function() {
       if (this.value && !this.value.startsWith('#')) {
         this.value = '#' + this.value;
       }
     });
     
-    // Impede apagar o #
     field.addEventListener('keydown', function(e) {
       if (this.value.startsWith('#') && 
           (e.key === 'Backspace' || e.key === 'Delete') && 
@@ -1804,7 +1784,6 @@ function setupClockfyPrefix() {
       }
     });
     
-    // Restaura # se removido acidentalmente
     field.addEventListener('input', function() {
       if (!this.value.startsWith('#') && this.value.length > 0) {
         const cursor = this.selectionStart;
@@ -1857,7 +1836,7 @@ window.fecharModal = fecharModal;
 window.verDetalhes = verDetalhes;
 window.consultarTabelaAtividades = consultarTabelaAtividades;
 window.toggleSenha = toggleSenha;
-window.encaminharAoFinanceiro = encaminharAoFinanceiro; // ✅ NOVO
+window.encaminharAoFinanceiro = encaminharAoFinanceiro;
 window.fecharConfirmModal = fecharConfirmModal;
 window.confirmarAcaoOk = confirmarAcaoOk;
 window.confirmarAcaoCancel = confirmarAcaoCancel;
@@ -1880,11 +1859,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     configurarMascaras();
     console.log('✅ Máscaras configuradas');
     
-    // ✅ NOVO: Setup de uppercase em tempo real
     setupUppercaseInputs();
     console.log('✅ Uppercase em tempo real configurado');
     
-    // ✅ NOVO: Setup do prefixo # para Clockfy
     setupClockfyPrefix();
     console.log('✅ Prefixo Clockfy configurado');
     
