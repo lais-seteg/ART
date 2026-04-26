@@ -1449,6 +1449,7 @@ async function salvarBaixa(id) {
 }
 
 // ========== MODAL DE CONFIRMAÇÃO CUSTOMIZADO ==========
+// ========== MODAL DE CONFIRMAÇÃO CUSTOMIZADO ==========
 let confirmResolve = null;
 
 function confirmarAcao(mensagem, titulo = 'Confirmação') {
@@ -1467,6 +1468,7 @@ function confirmarAcao(mensagem, titulo = 'Confirmação') {
 function fecharConfirmModal() {
   const overlay = document.getElementById('confirmModalOverlay');
   if (overlay) overlay.classList.remove('active');
+  // Resolve como false apenas se ainda estiver pendente
   if (confirmResolve) {
     confirmResolve(false);
     confirmResolve = null;
@@ -1474,17 +1476,18 @@ function fecharConfirmModal() {
 }
 
 function confirmarAcaoOk() {
-  fecharConfirmModal();
+  // ✅ Resolve como TRUE ANTES de fechar a UI
   if (confirmResolve) {
-    confirmResolve(true);
+    const res = confirmResolve;
     confirmResolve = null;
+    res(true);
   }
+  fecharConfirmModal();
 }
 
 function confirmarAcaoCancel() {
-  fecharConfirmModal();
+  fecharConfirmModal(); // Já resolve como false e fecha UI
 }
-
 // ========== AÇÕES CRÍTICAS ==========
 
 // ✅ NOVO: Função para técnico encaminhar ao financeiro (COM MODAL CUSTOMIZADO)
@@ -1509,29 +1512,60 @@ async function encaminharAoFinanceiro(id) {
 }
 
 async function excluirSolicitacao(id) {
+  console.log('🗑️ Tentando excluir solicitação:', id);
+  
   const confirmou = await confirmarAcao('Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.', 'Excluir Solicitação');
-  if (!confirmou) return;
+  if (!confirmou) {
+    console.log('❌ Exclusão cancelada pelo usuário');
+    return;
+  }
   
   if (!supabase) {
+    console.error('❌ Supabase client não inicializado');
     showToast('⚠️ Supabase indisponível. Não é possível excluir.', 'error');
     return;
   }
   
+  console.log('🔄 Executando DELETE no Supabase...');
+  
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('solicitacoes')
       .delete()
-      .eq('solicitacao_id', id);
+      .eq('solicitacao_id', id)
+      .select(); // ✅ Adiciona .select() para retornar dados e melhor debug
     
-    if (error) throw error;
+    console.log('📦 Resposta do Supabase:', { data, error });
     
+    if (error) {
+      console.error('❌ Erro do Supabase:', error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.warn('⚠️ Nenhum registro foi excluído. Verifique RLS ou ID.');
+      showToast('Nenhuma solicitação foi encontrada para exclusão.', 'error');
+      return;
+    }
+    
+    console.log('✅ Exclusão bem-sucedida:', data[0]);
     showToast('Solicitação excluída!', 'success');
+    
     AppState.solicitacoes = await carregarSolicitacoesDB();
     renderizarTabela();
     atualizarKPIs();
+    
   } catch(e) {
-    console.error('Erro ao excluir:', e);
-    showToast('Erro ao excluir solicitação.', 'error');
+    console.error('💥 Erro ao excluir:', e);
+    
+    // Mensagem mais informativa baseada no erro
+    if (e.message?.includes('row-level security')) {
+      showToast('❌ Permissão negada: verifique as políticas RLS no Supabase.', 'error');
+    } else if (e.message?.includes('permission denied')) {
+      showToast('❌ Usuário sem permissão para excluir no banco de dados.', 'error');
+    } else {
+      showToast(`Erro ao excluir: ${e.message || 'Verifique o console (F12).'}`, 'error');
+    }
   }
 }
 
