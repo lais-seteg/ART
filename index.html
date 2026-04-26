@@ -428,11 +428,11 @@
             <div class="form-grid">
               <div class="form-group full-width">
                 <label class="form-label required">Local do Boleto/ART</label>
-                <input type="text" id="diretorioArquivoCRBio" class="form-control" name="diretorioArquivo" required>
+                <input type="text" id="diretorioArquivoCRBIO" class="form-control" name="diretorioArquivo" required placeholder="Z:\servidor\arts\2026\boleto.pdf">
               </div>
               <div class="form-group full-width">
                 <label class="form-label required">Observações sobre documentos</label>
-                <input type="text" id="obsDocumentosCRBio" class="form-control" name="obsDocumentos" required>
+                <input type="text" id="obsDocumentosCRBIO" class="form-control" name="obsDocumentos" required placeholder="Informações sobre documentos">
               </div>
             </div>
           </div>
@@ -462,7 +462,7 @@
             <button class="filter-pill" data-status="Na fila">Na Fila</button>
             <button class="filter-pill" data-status="Processando">Em Andamento</button>
             <button class="filter-pill" data-status="Ajuste Pendente">Ajuste Pendente</button>
-            <button class="filter-pill" data-status="Pagamento Programado">Pagamento Prog.</button>
+            <button class="filter-pill" data-status="Pagamento Programado">Enc. Financeiro</button>
             <button class="filter-pill" data-status="Pago">Pago</button>
             <button class="filter-pill" data-status="Finalizado">Finalizado</button>
             <button class="filter-pill" data-status="Baixa Solicitada">Baixa Solicitada</button>
@@ -554,7 +554,7 @@
             <span class="kpi-value" id="kpiAjuste">0</span>
           </div>
           <div class="kpi-card kpi-pagamento">
-            <span class="kpi-label">Pagamento Programado</span>
+            <span class="kpi-label">Enc. Financeiro</span>
             <span class="kpi-value" id="kpiPagamento">0</span>
           </div>
           <div class="kpi-card kpi-pago">
@@ -587,7 +587,7 @@
             <div class="legend-item"><span class="status-badge status-na-fila">NA FILA</span><span>Aguardando atribuição</span></div>
             <div class="legend-item"><span class="status-badge status-processando">EM ANDAMENTO</span><span>Em produção</span></div>
             <div class="legend-item"><span class="status-badge status-ajuste">AJUSTE PENDENTE</span><span>Solicitante pediu ajuste</span></div>
-            <div class="legend-item"><span class="status-badge status-pagamento">PAGAMENTO PROG.</span><span>Aguardando pagamento</span></div>
+            <div class="legend-item"><span class="status-badge status-pagamento">ENC. FINANCEIRO</span><span>Encaminhado para o Financeiro</span></div>
             <div class="legend-item"><span class="status-badge status-pago">PAGO</span><span>Pagamento confirmado</span></div>
             <div class="legend-item"><span class="status-badge status-finalizado">FINALIZADO</span><span>Pronto para entrega</span></div>
             <div class="legend-item"><span class="status-badge status-baixa-solicitada">BAIXA SOLICITADA</span><span>Aguardando confirmação</span></div>
@@ -693,6 +693,24 @@
       </div>
       <div class="modal-body" id="baixaModalBody"></div>
       <div class="modal-footer" id="baixaModalFooter"></div>
+    </div>
+  </div>
+
+  <!-- ✅ MODAL DE CONFIRMAÇÃO CUSTOMIZADO -->
+  <div class="modal-overlay" id="confirmModalOverlay">
+    <div class="modal modal-sm confirm-modal">
+      <div class="modal-header">
+        <h2 id="confirmModalTitle">Confirmação</h2>
+        <button class="modal-close" onclick="fecharConfirmModal()" type="button">&times;</button>
+      </div>
+      <div class="modal-body confirm-modal-body">
+        <div class="confirm-icon">⚠️</div>
+        <p id="confirmModalMessage">Tem certeza?</p>
+      </div>
+      <div class="modal-footer confirm-modal-footer">
+        <button class="btn btn-ghost" onclick="confirmarAcaoCancel()">Cancelar</button>
+        <button class="btn btn-primary confirm-modal-ok" id="confirmModalOk" onclick="confirmarAcaoOk()">Confirmar</button>
+      </div>
     </div>
   </div>
 
