@@ -2,11 +2,50 @@
 const SUPABASE_URL = 'https://cbpthkoznhmlmbuynksn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_PG5hleeJ53FnP1S65_0WFQ_fUkAePiV';
 
-// Inicializar Supabase com proteção contra biblioteca não carregada
-window.supabaseClient = window.supabaseClient || (window.supabase?.createClient 
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
-  : null);
-var supabase = window.supabaseClient;
+let _sb = null;
+try {
+  const _supabaseCDN = window.supabase || window.supabaseJs;
+  if (_supabaseCDN && _supabaseCDN.createClient) {
+    _sb = _supabaseCDN.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    window.supabaseClient = _sb;
+  }
+} catch (e) {
+  console.error('Falha ao inicializar Supabase:', e);
+}
+
+// ========== ARMAZENAMENTO LOCAL (FALLBACK OFFLINE) ==========
+const LS = {
+  CACHE: 'seteg_sol_cache',
+  HIST: 'seteg_hist_cache',
+  QUEUE: 'seteg_sync_queue'
+};
+
+function lsGet(key, fallback) {
+  if (fallback === undefined) fallback = null;
+  try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e) { return fallback; }
+}
+
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+function isNetworkError(e) {
+  if (!e) return false;
+  const msg = (e.message || '').toLowerCase();
+  return msg.includes('failed to fetch') || msg.includes('load failed') ||
+    msg.includes('networkerror') || msg.includes('network request failed') ||
+    (e instanceof TypeError && msg.includes('fetch'));
+}
+
+function enfileirarSync(op) {
+  const q = lsGet(LS.QUEUE, []);
+  q.push({ ...op, ts: Date.now() });
+  lsSet(LS.QUEUE, q);
+}
+
 
 // ========== CONFIGURAÇÃO ==========
 const CONFIG = {
@@ -74,6 +113,16 @@ const NIVEIS_ATIVIDADE = [
   "ELABORAÇÃO", "ELABORAÇÃO EM BIM", "EXECUÇÃO", "EXECUÇÃO EM BIM", "FISCALIZAÇÃO",
   "FISCALIZAÇÃO EM BIM", "GESTÃO", "GESTÃO EM BIM", "ORIENTAÇÃO", "SUPERVISÃO"
 ];
+
+const ICONS = {
+  ver: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  atribuir: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>`,
+  encaminhar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+  status: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+  excluir: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+  ajuste: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+  baixa: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`
+};
 
 const ATIVIDADES_PROFISSIONAIS = [
   "AFERIÇÃO", "ANÁLISE", "ANTE-PROJETO", "ANTEPROJETO ARQUITETÔNICO", "ARBITRAGEM",
@@ -201,109 +250,200 @@ function getPermissoes() {
   }
 }
 
-// ========== SUPABASE CRUD ==========
+// ========== SUPABASE CRUD COM FALLBACK LOCAL ==========
 async function carregarSolicitacoesDB() {
-  if (!supabase) return [];
-  try {
-    const { data, error } = await supabase
-      .from('solicitacoes')
-      .select('*')
-      .order('created_at', { ascending: false });
+  if (_sb) {
+    try {
+      const { data, error } = await _sb
+        .from('solicitacoes')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Erro ao carregar:', error);
-    return [];
+      if (error) throw error;
+
+      lsSet(LS.CACHE, data || []);
+      return data || [];
+    } catch (e) {
+      console.warn('Supabase indisponível ao carregar:', e.message);
+    }
   }
+
+  const cache = lsGet(LS.CACHE, []);
+  if (cache.length > 0) {
+    showToast('Modo offline — exibindo dados em cache local.', 'info');
+  }
+  return cache;
 }
 
 async function salvarSolicitacaoDB(dados) {
-  if (!supabase) {
-    console.warn('⚠️ Supabase indisponível.');
-    throw new Error('Supabase indisponível');
-  }
-  try {
-    const { data, error } = await supabase
-      .from('solicitacoes')
-      .insert([dados])
-      .select()
-      .single();
+  if (_sb) {
+    try {
+      const { data, error } = await _sb
+        .from('solicitacoes')
+        .insert([dados])
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Erro ao salvar:', error);
-    throw error;
+      if (error) throw error;
+
+      const cache = lsGet(LS.CACHE, []);
+      cache.unshift(data);
+      lsSet(LS.CACHE, cache);
+      return data;
+    } catch (e) {
+      if (isNetworkError(e)) {
+        return _salvarLocal(dados);
+      }
+      throw e;
+    }
   }
+  return _salvarLocal(dados);
+}
+
+function _salvarLocal(dados) {
+  const registro = { ...dados, created_at: new Date().toISOString(), _local: true };
+  const cache = lsGet(LS.CACHE, []);
+  cache.unshift(registro);
+  lsSet(LS.CACHE, cache);
+  enfileirarSync({ tipo: 'inserir', dados });
+  showToast('Sem conexão — salvo localmente. Será sincronizado em breve.', 'info');
+  return registro;
 }
 
 async function atualizarSolicitacaoDB(solicitacaoId, dados) {
-  if (!supabase) {
-    console.warn('⚠️ Supabase indisponível. Não é possível atualizar.');
-    throw new Error('Supabase indisponível');
-  }
-  try {
-    const { data, error } = await supabase
-      .from('solicitacoes')
-      .update(dados)
-      .eq('solicitacao_id', solicitacaoId)
-      .select()
-      .single();
+  if (_sb) {
+    try {
+      const { data, error } = await _sb
+        .from('solicitacoes')
+        .update(dados)
+        .eq('solicitacao_id', solicitacaoId)
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Erro ao atualizar no Supabase:', error);
-    throw error;
+      if (error) throw error;
+
+      _atualizarCache(solicitacaoId, data);
+      return data;
+    } catch (e) {
+      if (isNetworkError(e)) {
+        return _atualizarLocal(solicitacaoId, dados);
+      }
+      throw e;
+    }
   }
+  return _atualizarLocal(solicitacaoId, dados);
+}
+
+function _atualizarCache(id, novosDados) {
+  const cache = lsGet(LS.CACHE, []);
+  const idx = cache.findIndex(s => s.solicitacao_id === id);
+  if (idx >= 0) cache[idx] = { ...cache[idx], ...novosDados };
+  lsSet(LS.CACHE, cache);
+}
+
+function _atualizarLocal(solicitacaoId, dados) {
+  _atualizarCache(solicitacaoId, dados);
+  enfileirarSync({ tipo: 'atualizar', id: solicitacaoId, dados });
+  return { solicitacao_id: solicitacaoId, ...dados };
 }
 
 async function adicionarHistoricoDB(solicitacaoId, acao, detalhes = '') {
-  if (!supabase) {
-    console.warn('⚠️ Supabase indisponível. Histórico não será salvo.');
+  const registro = {
+    solicitacao_id: solicitacaoId,
+    acao,
+    detalhes,
+    usuario_nome: AppState.usuarioAtual?.nome || 'Sistema',
+    usuario_tipo: AppState.usuarioAtual?.tipo || 'anonimo'
+  };
+
+  if (!_sb) {
+    enfileirarSync({ tipo: 'historico', dados: registro });
     return;
   }
   try {
-    const { error } = await supabase
-      .from('historico')
-      .insert([{
-        solicitacao_id: solicitacaoId,
-        acao,
-        detalhes,
-        usuario_nome: AppState.usuarioAtual?.nome || 'Sistema',
-        usuario_tipo: AppState.usuarioAtual?.tipo || 'anonimo'
-      }]);
-
+    const { error } = await _sb.from('historico').insert([registro]);
     if (error) throw error;
-  } catch (error) {
-    console.error('Erro ao salvar histórico:', error);
+  } catch (e) {
+    if (isNetworkError(e)) {
+      enfileirarSync({ tipo: 'historico', dados: registro });
+    } else {
+      console.error('Erro ao salvar histórico:', e);
+    }
   }
 }
 
 async function carregarHistoricoDB(solicitacaoId) {
-  if (!supabase) {
-    console.warn('⚠️ Supabase indisponível. Retornando histórico vazio.');
-    return [];
-  }
-  try {
-    const { data, error } = await supabase
-      .from('historico')
-      .select('*')
-      .eq('solicitacao_id', solicitacaoId)
-      .order('created_at', { ascending: false });
+  if (_sb) {
+    try {
+      const { data, error } = await _sb
+        .from('historico')
+        .select('*')
+        .eq('solicitacao_id', solicitacaoId)
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Erro ao carregar histórico:', error);
-    return [];
+      if (!error) return data || [];
+    } catch (e) {
+      console.warn('Histórico offline:', e.message);
+    }
+  }
+
+  const cache = lsGet(LS.HIST, {});
+  return (cache[solicitacaoId] || []);
+}
+
+// ========== SINCRONIZAÇÃO DA FILA OFFLINE ==========
+async function processarFilaSync() {
+  if (!_sb) return;
+  const fila = lsGet(LS.QUEUE, []);
+  if (!fila.length) return;
+
+  const pendentes = [];
+  let sincronizados = 0;
+
+  for (const op of fila) {
+    try {
+      if (op.tipo === 'inserir') {
+        const { error } = await _sb.from('solicitacoes').insert([op.dados]);
+        if (error && !error.message?.includes('duplicate') && !error.code?.includes('23505')) throw error;
+      } else if (op.tipo === 'atualizar') {
+        const { error } = await _sb.from('solicitacoes')
+          .update(op.dados).eq('solicitacao_id', op.id);
+        if (error) throw error;
+      } else if (op.tipo === 'excluir') {
+        const { error } = await _sb.from('solicitacoes')
+          .delete().eq('solicitacao_id', op.id);
+        if (error) throw error;
+      } else if (op.tipo === 'historico') {
+        const { error } = await _sb.from('historico').insert([op.dados]);
+        if (error) throw error;
+      }
+      sincronizados++;
+    } catch (e) {
+      if (isNetworkError(e)) {
+        pendentes.push(op);
+        break;
+      }
+      console.warn('Op sync ignorada:', e.message);
+    }
+  }
+
+  lsSet(LS.QUEUE, pendentes);
+
+  if (sincronizados > 0) {
+    showToast(`${sincronizados} registro(s) sincronizado(s) com o servidor.`, 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
   }
 }
 
-// ========== GERAR ID ==========
+// ========== GERAR ID SEGURO ==========
 function gerarNovoId() {
-  return `ART-${String(AppState.solicitacoes.length + 1).padStart(3, '0')}`;
+  const nums = AppState.solicitacoes
+    .map(s => parseInt((s.solicitacao_id || '').replace('ART-', ''), 10))
+    .filter(n => !isNaN(n));
+  const proximo = nums.length ? Math.max(...nums) + 1 : 1;
+  return `ART-${String(proximo).padStart(3, '0')}`;
 }
 
 // ========== SALVAR ==========
@@ -333,15 +473,17 @@ async function salvarSolicitacao() {
       delete dados.id;
       delete dados.created_at;
       delete dados.updated_at;
-      
+
       const novoId = gerarNovoId();
       dados.solicitacao_id = novoId;
       dados.status = 'Na fila';
-      
-      await salvarSolicitacaoDB(dados);
-      showToast(`${novoId} criada com sucesso!`, 'success');
+
+      const resultado = await salvarSolicitacaoDB(dados);
+      if (!resultado?._local) {
+        showToast(`${novoId} criada com sucesso!`, 'success');
+      }
     }
-    
+
     AppState.solicitacoes = await carregarSolicitacoesDB();
     renderizarTabela();
     atualizarKPIs();
@@ -349,37 +491,91 @@ async function salvarSolicitacao() {
     
   } catch(e) {
     console.error('Erro ao salvar:', e);
-    if (e.message && e.message.includes('duplicate key')) {
-      showToast('Erro: ID duplicado. Tente novamente.', 'error');
+    if (e.message?.includes('duplicate') || e.message?.includes('23505')) {
+      showToast('ID duplicado — tente novamente.', 'error');
+    } else if (isNetworkError(e)) {
+      showToast('Sem conexão com o servidor. Dados salvos localmente.', 'info');
+      AppState.solicitacoes = lsGet(LS.CACHE, []);
+      renderizarTabela();
+      atualizarKPIs();
+      fecharFormulario();
     } else {
-      showToast(`Erro ao salvar solicitação: ${e.message || 'Verifique o console (F12).'}`, 'error');
+      showToast(`Erro ao salvar: ${e.message || 'Verifique o console (F12).'}`, 'error');
     }
   }
 }
 
-// ✅ VALIDAÇÃO DE SENHA VIA BANCO DE DADOS
+// ========== VALIDAÇÃO DE SENHA (admin / financeiro) ==========
 async function validarSenhaNoBanco(tipo, nome, senha) {
-  if (!supabase) {
-    showToast('⚠️ Banco de dados indisponível', 'error');
+  if (!_sb) {
+    showToast('Servidor indisponível. Verifique sua conexão.', 'error');
     return false;
   }
-
   try {
-    const { data, error } = await supabase.rpc('validar_credencial_banco', {
+    const { data, error } = await _sb.rpc('validar_credencial_banco', {
       p_tipo: tipo,
       p_nome: nome,
       p_senha: senha
     });
-
     if (error) {
-      console.error('Erro na validação:', error);
+      console.error('Erro na validação RPC:', error);
+      showToast('Erro ao validar credenciais. Tente novamente.', 'error');
       return false;
     }
-
-    return data || false;
-  } catch (error) {
-    console.error('Falha ao conectar:', error);
+    return data === true;
+  } catch (e) {
+    console.error('Falha ao conectar para login:', e);
+    if (isNetworkError(e)) {
+      showToast('Sem conexão com o servidor. Não é possível fazer login agora.', 'error');
+    } else {
+      showToast('Erro inesperado ao validar acesso.', 'error');
+    }
     return false;
+  }
+}
+
+// ========== IDENTIFICAÇÃO POR CÓDIGO (Equipe ADM) ==========
+// Consulta direta na tabela "usuarios": tipo + senha + ativo = true → retorna nome.
+// Não usa RPC — evita erro 406 por função inexistente.
+async function buscarNomePorCodigo(p_tipo, p_senha) {
+  if (!_sb) {
+    showToast('Servidor indisponível. Verifique sua conexão.', 'error');
+    return null;
+  }
+
+  console.log('[Login ADM] Tabela: usuarios | Tipo:', p_tipo, '| Código: ***' + p_senha.slice(-2));
+
+  try {
+    const { data, error } = await _sb
+      .from('usuarios')
+      .select('nome')
+      .eq('tipo', p_tipo)
+      .eq('senha', p_senha)
+      .eq('ativo', true)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[Login ADM] Erro Supabase — code:', error.code, '| message:', error.message, '| details:', error.details);
+      showToast('Erro ao validar acesso. Tente novamente.', 'error');
+      return null;
+    }
+
+    if (data?.nome) {
+      console.log('[Login ADM] Usuário identificado:', data.nome);
+    } else {
+      console.log('[Login ADM] Nenhum usuário encontrado com esse código em usuarios (tipo =', p_tipo, ', ativo = true).');
+    }
+
+    return data?.nome || null;
+
+  } catch (e) {
+    console.error('[Login ADM] Exceção inesperada:', e.message || e);
+    if (isNetworkError(e)) {
+      showToast('Sem conexão com o servidor. Não é possível fazer login agora.', 'error');
+    } else {
+      showToast('Erro ao validar acesso. Tente novamente.', 'error');
+    }
+    return null;
   }
 }
 
@@ -435,54 +631,71 @@ function initCache() {
 // ========== AUTENTICAÇÃO ==========
 function toggleSenha() {
   const input = document.getElementById('senhaAcesso');
-  if (input) {
-    input.type = input.type === 'password' ? 'text' : 'password';
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  const iconVer = document.getElementById('iconSenhaVer');
+  const iconOcultar = document.getElementById('iconSenhaOcultar');
+  if (iconVer && iconOcultar) {
+    iconVer.classList.toggle('hidden', isPassword);
+    iconOcultar.classList.toggle('hidden', !isPassword);
   }
 }
 
 async function fazerLogin() {
   const senha = document.getElementById('senhaAcesso')?.value || '';
   const errorEl = document.getElementById('loginError');
-  
+
   if (!senha) {
-    errorEl.textContent = 'Digite a senha';
+    errorEl.textContent = 'Informe o código ou senha de acesso.';
     errorEl.classList.remove('hidden');
     return;
   }
-  
-  let tipo = AppState.tipoLoginAtual;
-  let nome = '';
-  
+
+  const tipo = AppState.tipoLoginAtual;
+  let nomeExibicao = '';
+
   if (tipo === 'tecnico') {
-    nome = document.getElementById('selectTecnico')?.value || '';
-    if (!nome) {
-      errorEl.textContent = 'Selecione seu nome';
+    // Consulta o banco: qual usuário da Equipe ADM tem este código?
+    // A RPC retorna o nome exato ou null — sem adivinhar, sem hardcoding.
+    nomeExibicao = await buscarNomePorCodigo('Equipe ADM', senha);
+    if (!nomeExibicao) {
+      errorEl.textContent = 'Código incorreto. Tente novamente.';
       errorEl.classList.remove('hidden');
       return;
     }
+  } else if (tipo === 'admin') {
+    if (!await validarSenhaNoBanco('admin', 'Gestor Administrativo', senha)) {
+      errorEl.textContent = 'Senha incorreta. Tente novamente.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    nomeExibicao = 'Gestor';
   } else {
-    nome = tipo === 'admin' ? 'Gestor Administrativo' : 'Gestor Financeiro';
+    if (!await validarSenhaNoBanco('financeiro', 'Gestor Financeiro', senha)) {
+      errorEl.textContent = 'Senha incorreta. Tente novamente.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    nomeExibicao = 'Financeiro';
   }
-  
-  const valido = await validarSenhaNoBanco(tipo, nome, senha);
-  
-  if (!valido) {
-    errorEl.textContent = 'Senha incorreta';
-    errorEl.classList.remove('hidden');
-    return;
-  }
-  
-  AppState.usuarioAtual = { tipo, nome };
+
+  AppState.usuarioAtual = { tipo, nome: nomeExibicao };
   localStorage.setItem('seteg_usuario', JSON.stringify(AppState.usuarioAtual));
-  
+
   fecharModalLogin();
   atualizarInterfaceUsuario();
   renderizarTabela();
-  atualizarNotificacoesFinanceiro(); // ✅ NOVO: Atualizar notificações ao logar
-  showToast(`Bem-vindo, ${nome}!`, 'success');
+  atualizarNotificacoesFinanceiro();
+  showToast(`Olá, ${nomeExibicao}! 👋`, 'success');
 }
 
-function logout() {
+async function logout() {
+  const confirmou = await confirmarAcao(
+    'Tem certeza que deseja sair do sistema?',
+    'Confirmar saída'
+  );
+  if (!confirmou) return;
   localStorage.removeItem('seteg_usuario');
   AppState.usuarioAtual = null;
   location.reload();
@@ -517,9 +730,9 @@ function atualizarInterfaceUsuario() {
   if (AppState.usuarioAtual && ui && bg) {
     ui.classList.remove('hidden');
     const ic = {
-      admin: '👔',
-      tecnico: '🔧',
-      financeiro: '💰'
+      admin: '🛡',
+      tecnico: '👥',
+      financeiro: '💳'
     }[AppState.usuarioAtual.tipo] || '👤';
     bg.textContent = `${ic} ${AppState.usuarioAtual.nome}`;
   } else if (ui) {
@@ -529,29 +742,47 @@ function atualizarInterfaceUsuario() {
 
 function abrirModalLogin(tipo) {
   AppState.tipoLoginAtual = tipo;
-  
+
   const titulos = {
-    admin: 'Acesso Gestor Administrativo',
-    tecnico: 'Acesso Técnico',
-    financeiro: 'Acesso Gestor Financeiro'
+    admin: 'Acesso – Gestor',
+    tecnico: 'Acesso – Equipe ADM',
+    financeiro: 'Acesso – Financeiro'
   };
-  
-  document.getElementById('loginModalTitle').textContent = titulos[tipo] || 'Acesso Restrito';
-  document.getElementById('senhaAcesso').value = '';
-  document.getElementById('loginError').classList.add('hidden');
-  
-  const campoTecnico = document.getElementById('campoSelecionarTecnico');
-  if (tipo === 'tecnico') {
-    campoTecnico.classList.remove('hidden');
-    document.getElementById('selectTecnico').value = '';
-  } else {
-    campoTecnico.classList.add('hidden');
+
+  const textos = {
+    admin: 'Informe a senha de acesso para o perfil Gestor.',
+    tecnico: 'Informe o código de acesso da Equipe ADM.',
+    financeiro: 'Informe a senha de acesso para o perfil Financeiro.'
+  };
+
+  const titleEl = document.getElementById('loginModalTitle');
+  if (titleEl) titleEl.textContent = titulos[tipo] || 'Acesso Restrito';
+
+  const textoEl = document.getElementById('loginTipoTexto');
+  if (textoEl) textoEl.textContent = textos[tipo] || 'Digite a senha para acessar.';
+
+  const labelEl = document.getElementById('loginSenhaLabel');
+  if (labelEl) labelEl.textContent = tipo === 'tecnico' ? 'Código de Acesso' : 'Senha';
+
+  const senhaField = document.getElementById('senhaAcesso');
+  if (senhaField) {
+    senhaField.value = '';
+    senhaField.placeholder = tipo === 'tecnico' ? 'Digite o código de acesso' : 'Digite sua senha';
+    senhaField.type = 'password';
   }
-  
+
+  const iconVer = document.getElementById('iconSenhaVer');
+  const iconOcultar = document.getElementById('iconSenhaOcultar');
+  if (iconVer) iconVer.classList.remove('hidden');
+  if (iconOcultar) iconOcultar.classList.add('hidden');
+
+  const errorEl = document.getElementById('loginError');
+  if (errorEl) errorEl.classList.add('hidden');
+
   DOM.loginModal?.classList.add('active');
+  setTimeout(() => senhaField?.focus(), 100);
 }
 
-// ✅ FUNÇÕES CORRIGIDAS PARA FECHAR MODAIS (com event)
 function fecharModalLogin(event) {
   if (event) {
     event.preventDefault();
@@ -560,6 +791,14 @@ function fecharModalLogin(event) {
   if (DOM.loginModal) {
     DOM.loginModal.classList.remove('active');
   }
+  const senhaField = document.getElementById('senhaAcesso');
+  if (senhaField) { senhaField.value = ''; senhaField.type = 'password'; }
+  const iconVer = document.getElementById('iconSenhaVer');
+  const iconOcultar = document.getElementById('iconSenhaOcultar');
+  if (iconVer) iconVer.classList.remove('hidden');
+  if (iconOcultar) iconOcultar.classList.add('hidden');
+  const errorEl = document.getElementById('loginError');
+  if (errorEl) errorEl.classList.add('hidden');
   AppState.tipoLoginAtual = null;
 }
 
@@ -809,14 +1048,49 @@ function validarFormulario(tipo) {
   return ok;
 }
 
+// ========== FILTRO DE SOLICITAÇÕES POR PERFIL ==========
+// Centraliza a lógica de filtro por usuário — usada por tabela E KPIs.
+// Para tecnico: compara tecnico_responsavel contra nome completo OU primeiro nome.
+// (Necessário porque o banco pode ter 'Kevilla' ou 'Kevilla Alencar' no campo.)
+function getSolicitacoesDoUsuario(todas) {
+  const u = AppState.usuarioAtual;
+  if (!u) return todas;
+
+  if (u.tipo === 'tecnico') {
+    const nomeCompleto = (u.nome || '').trim();
+    const primeiroNome = nomeCompleto.split(' ')[0];
+
+    console.log('[Filtro ADM] Usuário logado:', nomeCompleto);
+    console.log('[Filtro ADM] Comparando tecnico_responsavel contra:', `"${nomeCompleto}"`, 'ou', `"${primeiroNome}"`);
+
+    const resultado = todas.filter(s => {
+      const tr = (s.tecnico_responsavel || '').trim();
+      return tr === nomeCompleto || tr === primeiroNome;
+    });
+
+    console.log('[Filtro ADM] Solicitações encontradas:', resultado.length, 'de', todas.length, 'totais');
+    return resultado;
+  }
+
+  if (u.tipo === 'financeiro') {
+    return todas.filter(s =>
+      s.encaminhar_financeiro === true || s.status === 'Pagamento Programado'
+    );
+  }
+
+  return todas; // admin vê tudo
+}
+
 // ========== CARREGAR DADOS ==========
 async function carregarDados() {
   try {
+    // Primeiro tenta sincronizar a fila pendente
+    await processarFilaSync();
     AppState.solicitacoes = await carregarSolicitacoesDB();
     console.log('✅ Solicitações carregadas:', AppState.solicitacoes.length);
   } catch(e) {
     console.error('Erro ao carregar dados:', e);
-    AppState.solicitacoes = [];
+    AppState.solicitacoes = lsGet(LS.CACHE, []);
   }
 }
 
@@ -831,17 +1105,9 @@ function renderizarTabela() {
   const bus = DOM.searchInput?.value.toLowerCase().trim() || '';
   const perms = getPermissoes();
   
-  let dados = AppState.solicitacoes;
-  
-  // ✅ NOVO: Filtrar por perfil
-  if (AppState.usuarioAtual?.tipo === 'tecnico') {
-    // Técnico vê apenas solicitações atribuídas a ele
-    dados = dados.filter(s => s.tecnico_responsavel === AppState.usuarioAtual.nome);
-  } else if (AppState.usuarioAtual?.tipo === 'financeiro') {
-    // Financeiro vê apenas solicitações encaminhadas para pagamento
-    dados = dados.filter(s => s.encaminhar_financeiro === true || s.status === 'Pagamento Programado');
-  }
-  
+  // Aplica filtro de perfil (tecnico, financeiro, admin)
+  let dados = getSolicitacoesDoUsuario(AppState.solicitacoes);
+
   // Filtros adicionais
   dados = dados.filter(s => {
     if (fs !== 'todas' && s.status !== fs) return false;
@@ -898,32 +1164,32 @@ function renderTableRow(s, perms) {
   const cc = s.tipo === 'CRBio' ? 'cr-bio' : '';
   const sf = str => escapeHtml(str || '—');
   
-  let a = `<button class="btn btn-ghost-sm" data-action="ver" data-id="${s.solicitacao_id}" title="Ver Detalhes">👁</button>`;
-  
+  let a = `<button class="btn btn-ghost-sm" data-action="ver" data-id="${s.solicitacao_id}" title="Ver Detalhes">${ICONS.ver}</button>`;
+
   if (perms.tipoAdmin) {
-    a += `<button class="btn btn-ghost-sm" data-action="atribuir" data-id="${s.solicitacao_id}" title="Atribuir Técnico">👥</button>`;
+    a += `<button class="btn btn-ghost-sm" data-action="atribuir" data-id="${s.solicitacao_id}" title="Atribuir Técnico">${ICONS.atribuir}</button>`;
   }
-  
-  // ✅ NOVO: Técnico pode atribuir ao financeiro
-  if (perms.tipoTecnico && perms.podeEncaminharFinanceiro && s.status !== 'Finalizado' && s.status !== 'Pago') {
-    a += `<button class="btn btn-ghost-sm" data-action="encaminhar-financeiro" data-id="${s.solicitacao_id}" title="Encaminhar ao Financeiro">💰</button>`;
+
+  if (perms.tipoTecnico && perms.podeEncaminharFinanceiro &&
+      s.status !== 'Pagamento Programado' && s.status !== 'Finalizado' &&
+      s.status !== 'Pago' && s.status !== 'Baixa Solicitada' && s.status !== 'Baixa da ART') {
+    a += `<button class="btn btn-ghost-sm btn-encaminhar" data-action="encaminhar-financeiro" data-id="${s.solicitacao_id}" title="Enviar para o Financeiro">${ICONS.encaminhar}<span class="btn-label">Enviar</span></button>`;
   }
-  
+
   if (perms.podeMudarStatus) {
-    a += `<button class="btn btn-ghost-sm" data-action="status" data-id="${s.solicitacao_id}" title="Alterar Status">🔄</button>`;
+    a += `<button class="btn btn-ghost-sm" data-action="status" data-id="${s.solicitacao_id}" title="Alterar Status">${ICONS.status}</button>`;
   }
-  
+
   if (perms.podeExcluir) {
-    a += `<button class="btn btn-ghost-sm" data-action="excluir" data-id="${s.solicitacao_id}" title="Excluir">🗑</button>`;
+    a += `<button class="btn btn-ghost-sm" data-action="excluir" data-id="${s.solicitacao_id}" title="Excluir">${ICONS.excluir}</button>`;
   }
-  
+
   if (s.status !== 'Finalizado' && s.status !== 'Pago' && s.status !== 'Na fila' && s.status !== 'Baixa Solicitada' && s.status !== 'Baixa da ART') {
-    a += `<button class="btn btn-ghost-sm" data-action="ajuste" data-id="${s.solicitacao_id}" title="Solicitar Ajuste">📝</button>`;
+    a += `<button class="btn btn-ghost-sm" data-action="ajuste" data-id="${s.solicitacao_id}" title="Solicitar Ajuste">${ICONS.ajuste}</button>`;
   }
-  
-  // ✅ CORREÇÃO: Botão de baixa aparece quando status é "Finalizado" e baixa não foi solicitada
+
   if (s.status === 'Finalizado' && !s.baixa_solicitada) {
-    a += `<button class="btn btn-ghost-sm" data-action="baixa" data-id="${s.solicitacao_id}" title="Solicitar Baixa da ART">📥</button>`;
+    a += `<button class="btn btn-ghost-sm" data-action="baixa" data-id="${s.solicitacao_id}" title="Solicitar Baixa da ART">${ICONS.baixa}</button>`;
   }
   
   const tr = document.createElement('tr');
@@ -973,17 +1239,20 @@ function renderizarNumerosPagina() {
 
 // ========== KPIs ==========
 function atualizarKPIs() {
+  // Usa o mesmo filtro de perfil da tabela — Equipe ADM vê apenas os seus
+  const dados = getSolicitacoesDoUsuario(AppState.solicitacoes);
+
   const counts = {
-    Total: AppState.solicitacoes.length,
-    Fila: AppState.solicitacoes.filter(s => s.status === 'Na fila').length,
-    Processando: AppState.solicitacoes.filter(s => s.status === 'Processando').length,
-    Ajuste: AppState.solicitacoes.filter(s => s.status === 'Ajuste Pendente').length,
-    Pagamento: AppState.solicitacoes.filter(s => s.status === 'Pagamento Programado').length,
-    Pago: AppState.solicitacoes.filter(s => s.status === 'Pago').length,
-    Finalizado: AppState.solicitacoes.filter(s => s.status === 'Finalizado').length,
-    Baixa: AppState.solicitacoes.filter(s => s.status === 'Baixa da ART' || s.status === 'Baixa Solicitada').length
+    Total: dados.length,
+    Fila: dados.filter(s => s.status === 'Na fila').length,
+    Processando: dados.filter(s => s.status === 'Processando').length,
+    Ajuste: dados.filter(s => s.status === 'Ajuste Pendente').length,
+    Pagamento: dados.filter(s => s.status === 'Pagamento Programado').length,
+    Pago: dados.filter(s => s.status === 'Pago').length,
+    Finalizado: dados.filter(s => s.status === 'Finalizado').length,
+    Baixa: dados.filter(s => s.status === 'Baixa da ART' || s.status === 'Baixa Solicitada').length
   };
-  
+
   Object.entries(counts).forEach(([k, v]) => {
     const el = DOM.kpis[k];
     if (el) el.textContent = v;
@@ -1030,8 +1299,8 @@ function atualizarNotificacoesFinanceiro() {
   DOM.notificacoesFinanceiro.classList.remove('hidden');
   
   // Lista os itens
-  DOM.listaPagamentosPendentes.innerHTML = pendentes.slice(0, 5).map(s => 
-    `<div style="padding: 0.25rem 0; border-bottom: 1px solid var(--border);">
+  DOM.listaPagamentosPendentes.innerHTML = pendentes.slice(0, 5).map(s =>
+    `<div class="notification-item">
       <strong>${escapeHtml(s.solicitacao_id)}</strong><br>
       <small>${escapeHtml(s.contratante)} • ${formatarMoedaBR(s.valor)}</small>
     </div>`
@@ -1134,7 +1403,7 @@ async function verDetalhes(id) {
     ${s.tipo === 'CRBio' ? `
     <div class="detail-section-title">🔗 CRBio</div>
     <div class="detail-grid">
-      <div class="detail-item"><span class="detail-label">Vinculado ACMB</span><span class="detail-value">${s.vinculadoACMB === 'sim' ? 'Sim' : 'Não'}</span></div>
+      <div class="detail-item"><span class="detail-label">Vinculado ACMB</span><span class="detail-value">${(s.vinculado_acmb || s.vinculadoACMB) === 'sim' ? 'Sim' : 'Não'}</span></div>
       <div class="detail-item"><span class="detail-label">Identificação</span><span class="detail-value">${sf(s.identificacao)}</span></div>
       <div class="detail-item"><span class="detail-label">Localidade</span><span class="detail-value">${sf(s.localidade)}</span></div>
       <div class="detail-item"><span class="detail-label">Formato</span><span class="detail-value">${sf(s.formatoExecucao)}</span></div>
@@ -1240,8 +1509,8 @@ function abrirEditModal(id) {
       <label class="form-label">Técnico Responsável</label>
       <select class="form-control" id="editTecnicoSelect">
         <option value="">Selecione...</option>
-        <option value="Henrique Silva" ${s.tecnico_responsavel === 'Henrique Silva' ? 'selected' : ''}>Henrique Silva</option>
-        <option value="Carla Dyane" ${s.tecnico_responsavel === 'Carla Dyane' ? 'selected' : ''}>Carla Dyane</option>
+        <option value="Kevilla" ${s.tecnico_responsavel === 'Kevilla' ? 'selected' : ''}>Kevilla</option>
+        <option value="Henrique" ${s.tecnico_responsavel === 'Henrique' ? 'selected' : ''}>Henrique</option>
       </select>
     </div>
   `;
@@ -1322,11 +1591,6 @@ async function salvarStatus(id) {
     // ✅ NOVO: Quando status muda para "Finalizado", resetar flag de baixa solicitada para permitir nova solicitação
     if (novoStatus === 'Finalizado') {
       updateData.baixa_solicitada = false;
-    }
-    
-    // Quando financeiro marca "Pago", retorna visualmente ao técnico como Finalizado
-    if (AppState.usuarioAtual?.tipo === 'financeiro' && novoStatus === 'Pago') {
-      // Mantém o tecnico_responsavel para que a solicitação continue visível para ele
     }
     
     await atualizarSolicitacaoDB(id, updateData);
@@ -1493,11 +1757,12 @@ async function encaminharAoFinanceiro(id) {
   if (!confirmou) return;
   
   try {
-    await atualizarSolicitacaoDB(id, { 
+    await atualizarSolicitacaoDB(id, {
       status: 'Pagamento Programado',
-      encaminhar_financeiro: true 
+      encaminhar_financeiro: true
     });
-    await adicionarHistoricoDB(id, 'Encaminhado ao Financeiro', 'Solicitação enviada para pagamento');
+    const nomeEnviador = AppState.usuarioAtual?.nome || 'Equipe ADM';
+    await adicionarHistoricoDB(id, 'Encaminhado ao Financeiro', `Enviado por ${nomeEnviador}`);
     showToast('Encaminhado ao financeiro com sucesso!', 'success');
     AppState.solicitacoes = await carregarSolicitacoesDB();
     renderizarTabela();
@@ -1509,44 +1774,46 @@ async function encaminharAoFinanceiro(id) {
 }
 
 async function excluirSolicitacao(id) {
-  console.log('🗑️ Tentando excluir solicitação:', id);
-  
-  const confirmou = await confirmarAcao('Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.', 'Excluir Solicitação');
-  if (!confirmou) {
-    console.log('❌ Exclusão cancelada pelo usuário');
+  const confirmou = await confirmarAcao(
+    'Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.',
+    'Excluir Solicitação'
+  );
+  if (!confirmou) return;
+
+  // Exclusão local imediata (sempre)
+  const _excluirLocal = () => {
+    const cache = lsGet(LS.CACHE, []);
+    const nova = cache.filter(s => s.solicitacao_id !== id);
+    lsSet(LS.CACHE, nova);
+    AppState.solicitacoes = nova;
+    renderizarTabela();
+    atualizarKPIs();
+  };
+
+  if (!_sb) {
+    _excluirLocal();
+    showToast('Solicitação removida localmente.', 'info');
     return;
   }
-  
-  if (!supabase) {
-    console.error('❌ Supabase client não inicializado');
-    showToast('⚠️ Supabase indisponível. Não é possível excluir.', 'error');
-    return;
-  }
-  
-  console.log('🔄 Executando DELETE no Supabase...');
-  
+
   try {
-    const { error } = await supabase
+    const { error } = await _sb
       .from('solicitacoes')
       .delete()
       .eq('solicitacao_id', id);
-    
+
     if (error) throw error;
-    
-    console.log('✅ Exclusão bem-sucedida:', id);
+
+    _excluirLocal();
     showToast('Solicitação excluída!', 'success');
-    
-    AppState.solicitacoes = await carregarSolicitacoesDB();
-    renderizarTabela();
-    atualizarKPIs();
-    
   } catch(e) {
-    console.error('💥 Erro ao excluir:', e);
-    
-    if (e.message?.includes('row-level security')) {
-      showToast('❌ Permissão negada: verifique as políticas RLS no Supabase.', 'error');
-    } else if (e.message?.includes('permission denied')) {
-      showToast('❌ Usuário sem permissão para excluir no banco de dados.', 'error');
+    console.error('Erro ao excluir:', e);
+    if (isNetworkError(e)) {
+      _excluirLocal();
+      enfileirarSync({ tipo: 'excluir', id });
+      showToast('Sem conexão — removido localmente. Será sincronizado.', 'info');
+    } else if (e.message?.includes('row-level security') || e.message?.includes('permission denied')) {
+      showToast('Sem permissão para excluir no banco. Verifique as políticas RLS.', 'error');
     } else {
       showToast(`Erro ao excluir: ${e.message || 'Verifique o console (F12).'}`, 'error');
     }
@@ -1840,6 +2107,10 @@ window.encaminharAoFinanceiro = encaminharAoFinanceiro;
 window.fecharConfirmModal = fecharConfirmModal;
 window.confirmarAcaoOk = confirmarAcaoOk;
 window.confirmarAcaoCancel = confirmarAcaoCancel;
+window.salvarAtribuicao = salvarAtribuicao;
+window.salvarStatus = salvarStatus;
+window.salvarAjuste = salvarAjuste;
+window.salvarBaixa = salvarBaixa;
 
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', async () => {

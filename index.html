@@ -22,9 +22,18 @@
         <h1>Sistema de Solicitação de ART</h1>
       </div>
       <div class="header-actions">
-        <button class="btn btn-ghost btn-login-header" data-login-type="admin">👔 Gestor</button>
-        <button class="btn btn-ghost btn-login-header" data-login-type="financeiro">💰 Financeiro</button>
-        <button class="btn btn-ghost btn-login-header" data-login-type="tecnico">🔧 Técnico</button>
+        <button class="btn btn-ghost btn-login-header" data-login-type="admin">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          Gestor
+        </button>
+        <button class="btn btn-ghost btn-login-header" data-login-type="financeiro">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Financeiro
+        </button>
+        <button class="btn btn-ghost btn-login-header" data-login-type="tecnico">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Equipe ADM
+        </button>
         <div id="userInfo" class="hidden">
           <span class="user-badge" id="userBadge"></span>
           <button class="btn btn-ghost-sm" onclick="logout()">Sair</button>
@@ -525,6 +534,7 @@
             </select>
           </div>
         </div>
+
       </div>
 
       <!-- KPIs LATERAL DIREITA -->
@@ -564,35 +574,36 @@
           </div>
         </div>
         
-        <!-- ✅ NOVO: Notificações para Financeiro -->
-        <div id="notificacoesFinanceiro" class="hidden" style="margin-top: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-sm);">
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-            <span style="font-size: 1.2rem;">🔔</span>
+        <!-- Notificações para Financeiro -->
+        <div id="notificacoesFinanceiro" class="notifications-panel hidden">
+          <div class="notifications-panel-header">
+            <span class="notifications-panel-icon">🔔</span>
             <strong>Pagamentos Pendentes</strong>
             <span id="badgePagamentosPendentes" class="status-badge status-pagamento" style="margin-left: auto; min-width: 24px; text-align: center;">0</span>
           </div>
-          <div id="listaPagamentosPendentes" style="font-size: 0.85rem; color: var(--text-secondary); max-height: 150px; overflow-y: auto;"></div>
+          <div id="listaPagamentosPendentes" class="notifications-panel-list"></div>
         </div>
-        
+
         <div class="status-legend">
           <h4>Legenda de Status</h4>
           <div class="legend-items-wrapper">
             <div class="legend-item"><span class="status-badge status-na-fila">NA FILA</span><span>Aguardando atribuição</span></div>
             <div class="legend-item"><span class="status-badge status-processando">EM ANDAMENTO</span><span>Em produção</span></div>
             <div class="legend-item"><span class="status-badge status-ajuste">AJUSTE PENDENTE</span><span>Solicitante pediu ajuste</span></div>
-            <div class="legend-item"><span class="status-badge status-pagamento">ENC. FINANCEIRO</span><span>Encaminhado para o Financeiro</span></div>
+            <div class="legend-item"><span class="status-badge status-pagamento">ENC. FINANCEIRO</span><span>Enc. para o Financeiro</span></div>
             <div class="legend-item"><span class="status-badge status-pago">PAGO</span><span>Pagamento confirmado</span></div>
             <div class="legend-item"><span class="status-badge status-finalizado">FINALIZADO</span><span>Pronto para entrega</span></div>
             <div class="legend-item"><span class="status-badge status-baixa-solicitada">BAIXA SOLICITADA</span><span>Aguardando confirmação</span></div>
             <div class="legend-item"><span class="status-badge status-baixa-art">BAIXA DA ART</span><span>ART encerrada</span></div>
           </div>
         </div>
+
       </aside>
 
     </div>
 
     <footer class="app-footer">
-      <span>Versão 1.0.0 • © Seteg – Soluções Geológicas e Ambientais • 2026</span>
+      <span>Versão 1.0.0 • © Seteg Soluções Ambientais Ltda • 2026</span>
     </footer>
   </div>
 
@@ -605,27 +616,19 @@
     </div>
     <div class="modal-body">
       <p id="loginTipoTexto" class="login-info">Digite a senha para acessar</p>
-      
-      <div class="form-group hidden" id="campoSelecionarTecnico">
-        <label class="form-label">Selecione seu nome</label>
-        <select id="selectTecnico" class="form-control">
-          <option value="">Selecione...</option>
-          <option value="Henrique Silva">Henrique Silva</option>
-          <option value="Carla Dyane">Carla Dyane</option>
-        </select>
-      </div>
-      
+
       <div class="form-group">
-        <label class="form-label">Senha</label>
-        <div style="position: relative;">
-          <input type="password" id="senhaAcesso" class="form-control" placeholder="Digite sua senha" style="padding-right: 40px;">
-          <button type="button" onclick="toggleSenha()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1.1rem;">
-            👁️
+        <label class="form-label" id="loginSenhaLabel">Código de Acesso</label>
+        <div class="password-input-wrapper">
+          <input type="password" id="senhaAcesso" class="form-control" placeholder="Digite o código de acesso" autocomplete="off">
+          <button type="button" id="btnToggleSenha" class="btn-toggle-senha" onclick="toggleSenha()" title="Mostrar/Ocultar">
+            <svg id="iconSenhaVer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="iconSenhaOcultar" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
         </div>
       </div>
-      
-      <p id="loginError" class="error-msg hidden">Senha incorreta.</p>
+
+      <p id="loginError" class="error-msg hidden">Código incorreto. Tente novamente.</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModalLogin(event)">Cancelar</button>
