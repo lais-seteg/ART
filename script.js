@@ -843,19 +843,27 @@ function fecharModalLogin(event) {
 }
 
 // ========== FORMULÁRIO ==========
+function definirMinPrazoEmissao() {
+  const hoje = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[name="prazoEmissaoArt"]').forEach(el => {
+    el.min = hoje;
+  });
+}
+
 function toggleFormulario() {
   const c = DOM.formContainer;
   const t = document.getElementById('btnToggleText');
   const b = document.getElementById('btnNovaSolicitacao');
-  
+
   if (!c || !t) return;
-  
+
   if (c.classList.contains('expanded')) {
     fecharFormulario();
   } else {
     c.classList.add('expanded');
     t.textContent = 'Fechar Formulário';
     if (b) b.setAttribute('aria-expanded', 'true');
+    definirMinPrazoEmissao();
   }
 }
 
@@ -1062,6 +1070,25 @@ function validarFormulario(tipo) {
     }
   });
   
+  // Prazo de emissão nunca pode ser anterior à data de criação da ART
+  const campoPrazo = p.querySelector('input[name="prazoEmissaoArt"]');
+  if (campoPrazo && campoPrazo.value) {
+    const prazo = new Date(campoPrazo.value + 'T00:00:00');
+    let dataCriacao;
+    if (AppState.solicitacaoEditando) {
+      const registro = AppState.solicitacoes.find(s => s.solicitacao_id === AppState.solicitacaoEditando);
+      dataCriacao = registro?.created_at ? new Date(registro.created_at) : new Date();
+    } else {
+      dataCriacao = new Date();
+    }
+    dataCriacao.setHours(0, 0, 0, 0);
+    if (prazo < dataCriacao) {
+      campoPrazo.classList.add('error');
+      showToast('O prazo de emissão da ART não pode ser anterior à data de criação.', 'error');
+      ok = false;
+    }
+  }
+
   if (tipo === 'CRBio') {
     const vinc = document.querySelector('input[name="vinculadoACMB"]:checked');
     if (!vinc) {
@@ -2004,6 +2031,8 @@ function configurarEventListeners() {
     } else if (t === 'CRBio') {
       if (DOM.formCRBio) DOM.formCRBio.classList.remove('hidden');
     }
+
+    definirMinPrazoEmissao();
 
     // dataSolicitacao é salvo automaticamente ao submeter, não é campo visível
   });

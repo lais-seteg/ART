@@ -102,9 +102,9 @@
   border-color: var(--border-color);
 }
 [data-theme="light"] .form-control::placeholder { color: var(--text-muted); }
-[data-theme="light"] .form-section-block { background: rgba(255,255,255,0.75); }
-[data-theme="light"] .form-container.expanded { background: var(--bg-primary); box-shadow: 0 -10px 40px rgba(0,0,0,0.15); }
-[data-theme="light"] .form-header { background: var(--bg-primary); }
+[data-theme="light"] .form-section-block { background: rgba(255,255,255,0.18); border-radius: var(--radius-md); }
+[data-theme="light"] .form-container.expanded { background: rgba(238, 242, 248, 0.78) !important; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); }
+[data-theme="light"] .form-header { background: rgba(238, 242, 248, 0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 
 /* ── Clockify autocomplete ── */
 [data-theme="light"] .clockify-suggestions {
@@ -133,10 +133,10 @@
 [data-theme="light"] .legend-item { border-bottom-color: var(--border-color); }
 
 /* ── Modais ── */
-[data-theme="light"] .modal { background: #FFFFFF; }
-[data-theme="light"] .modal-header { background: var(--bg-secondary); }
-[data-theme="light"] .modal-body { background: #FFFFFF; }
-[data-theme="light"] .modal-footer { background: #FFFFFF; }
+[data-theme="light"] .modal { background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+[data-theme="light"] .modal-header { background: rgba(221, 230, 242, 0.88); }
+[data-theme="light"] .modal-body { background: transparent; }
+[data-theme="light"] .modal-footer { background: transparent; }
 [data-theme="light"] .login-info { background: var(--bg-secondary); }
 
 /* ── Histórico ── */
@@ -396,9 +396,11 @@ body::before {
   box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
   animation: formSlideIn 0.3s ease;
   max-height: calc(100vh - var(--header-height) - var(--footer-height));
-  /* CORREÇÃO: tornar visível ao expandir */
   opacity: 1 !important;
   visibility: visible !important;
+  background: rgba(12, 24, 53, 0.82) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 @keyframes formSlideIn {
@@ -415,7 +417,9 @@ body::before {
   margin-bottom: 1.5rem;
   position: sticky;
   top: 0;
-  background: var(--bg-primary);
+  background: rgba(12, 24, 53, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   z-index: 10;
 }
 
@@ -456,10 +460,12 @@ body::before {
 
 .form-section-block {
   margin-bottom: 1.75rem;
-  padding-bottom: 1.75rem;
+  padding: 1.25rem 1rem 1.75rem;
   border-bottom: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
 }
-.form-section-block:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.form-section-block:last-child { margin-bottom: 0; padding-bottom: 1.25rem; border-bottom: none; }
 
 .form-subtitle {
   font-size: 0.95rem;
@@ -930,7 +936,9 @@ body::before {
 .modal-overlay.active { display: flex; }
 
 .modal {
-  background: var(--bg-card);
+  background: rgba(22, 38, 84, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   width: 100%;
