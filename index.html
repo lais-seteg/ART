@@ -34,6 +34,12 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Equipe ADM
         </button>
+        <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro">
+          <div class="theme-toggle-slider" id="themeSlider">
+            <!-- ícone lua (dark) -->
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </div>
+        </button>
         <div id="userInfo" class="hidden">
           <span class="user-badge" id="userBadge"></span>
           <button class="btn btn-ghost-sm" onclick="logout()">Sair</button>
@@ -81,15 +87,11 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Nome do Solicitante</label>
-                <input type="text" id="solicitanteCREA" class="form-control" name="solicitante" required>
+                <input type="text" id="solicitanteCREA" class="form-control" name="solicitante" required placeholder="Ex.: Gustavo Toledo">
               </div>
               <div class="form-group">
-                <label class="form-label required">Data da Solicitação</label>
-                <input type="date" id="dataSolicitacaoCREA" class="form-control" name="dataSolicitacao" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label required">Departamento</label>
-                <input type="text" id="departamentoCREA" class="form-control" name="departamento" required>
+                <label class="form-label required">Prazo da Emissão da ART</label>
+                <input type="date" id="prazoEmissaoArtCREA" class="form-control" name="prazoEmissaoArt" required>
               </div>
             </div>
           </div>
@@ -99,11 +101,15 @@
             <div class="form-grid">
               <div class="form-group full-width">
                 <label class="form-label required">Nome do Empreendimento</label>
-                <input type="text" id="nomeEmpreendimentoCREA" class="form-control" name="nomeEmpreendimento" required placeholder="Digite o nome do empreendimento">
+                <div class="clockify-input-wrapper">
+                  <input type="text" id="nomeEmpreendimentoCREA" class="form-control" name="nomeEmpreendimento" required
+                    placeholder="Digite o nome do empreendimento..." autocomplete="off">
+                  <div class="clockify-suggestions" id="clockifySuggestionsCREA"></div>
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label required">Código do Clockfy</label>
-                <input type="text" id="codigoClockfyCREA" class="form-control" name="codigoClockfy" required placeholder="Ex: #0001-1">
+              <div class="form-group full-width">
+                <label class="form-label required">Código do Clockify</label>
+                <input type="text" id="codigoClockfyCREA" class="form-control" name="codigoClockfy" required readonly placeholder="Código do projeto (preenchido automaticamente)">
               </div>
             </div>
           </div>
@@ -113,7 +119,7 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Nome do Técnico</label>
-                <input type="text" id="nomeTecnicoCREA" class="form-control" name="nomeTecnico" required>
+                <input type="text" id="nomeTecnicoCREA" class="form-control" name="nomeTecnico" required placeholder="Ex.: Ana Silva">
               </div>
               <div class="form-group">
                 <label class="form-label required">Estado</label>
@@ -136,7 +142,7 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Nome do Contratante</label>
-                <input type="text" id="contratanteCREA" class="form-control" name="contratante" required>
+                <input type="text" id="contratanteCREA" class="form-control" name="contratante" required placeholder="Ex.: Empresa X Ltda.">
               </div>
               <div class="form-group">
                 <label class="form-label required">CNPJ</label>
@@ -144,31 +150,31 @@
               </div>
               <div class="form-group">
                 <label class="form-label required">E-mail</label>
-                <input type="email" id="emailCREA" class="form-control" name="email" required placeholder="email@exemplo.com">
+                <input type="email" id="emailCREA" class="form-control" name="email" required placeholder="email@empresa.com">
               </div>
               <div class="form-group">
                 <label class="form-label required">Contato</label>
-                <input type="text" id="contatoCREA" class="form-control mask-phone" name="contato" required placeholder="(00) 00000-0000">
+                <input type="text" id="contatoCREA" class="form-control mask-phone" name="contato" required placeholder="(85) 99999-0000">
               </div>
               <div class="form-group full-width">
                 <label class="form-label required">Endereço</label>
-                <input type="text" id="enderecoCREA" class="form-control" name="endereco" required>
+                <input type="text" id="enderecoCREA" class="form-control" name="endereco" required placeholder="Ex.: Rua das Flores, 123">
               </div>
               <div class="form-group">
                 <label class="form-label required">Bairro</label>
-                <input type="text" id="bairroCREA" class="form-control" name="bairro" required>
+                <input type="text" id="bairroCREA" class="form-control" name="bairro" required placeholder="Ex.: Centro">
               </div>
               <div class="form-group">
                 <label class="form-label required">CEP</label>
-                <input type="text" id="cepCREA" class="form-control mask-cep" name="cep" required placeholder="00000-000">
+                <input type="text" id="cepCREA" class="form-control mask-cep" name="cep" required placeholder="60000-000">
               </div>
               <div class="form-group full-width">
                 <label class="form-label required">Endereço da Obra</label>
-                <input type="text" id="enderecoObraCREA" class="form-control" name="enderecoObra" required>
+                <input type="text" id="enderecoObraCREA" class="form-control" name="enderecoObra" required placeholder="Ex.: Rodovia BR-101, km 45">
               </div>
               <div class="form-group">
                 <label class="form-label required">Bairro da Obra</label>
-                <input type="text" id="bairroObraCREA" class="form-control" name="bairroObra" required>
+                <input type="text" id="bairroObraCREA" class="form-control" name="bairroObra" required placeholder="Ex.: Distrito Industrial">
               </div>
               <div class="form-group">
                 <label class="form-label required">CEP da Obra</label>
@@ -190,16 +196,6 @@
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="form-section-block">
-            <h4 class="form-subtitle">🛠️ Atividades CREA</h4>
-            <div id="atividadesCREAContainer"></div>
-            <button type="button" class="btn btn-ghost-outline" id="btnAddAtividadeCREA">+ Adicionar Atividade</button>
-          </div>
-
-          <div class="form-section-block">
-            <h4 class="form-subtitle">📅 Prazo, Valor e Equipe</h4>
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Data de Início do Projeto</label>
@@ -210,22 +206,24 @@
                 <input type="date" id="dataFimCREA" class="form-control" name="dataFim" required>
               </div>
               <div class="form-group">
-                <label class="form-label required">Prazo Para Emissão da ART</label>
-                <input type="date" id="prazoEmissaoArtCREA" class="form-control" name="prazoEmissaoArt" required>
+                <label class="form-label required">Horas do Projeto</label>
+                <input type="number" id="qtdHorasCREA" class="form-control" name="qtdHoras" required min="0" placeholder="Ex.: 120">
               </div>
               <div class="form-group">
-                <label class="form-label required">Horas</label>
-                <input type="number" id="qtdHorasCREA" class="form-control" name="qtdHoras" required min="0">
-              </div>
-              <div class="form-group">
-                <label class="form-label required">Valor (R$)</label>
-                <input type="text" id="valorCREA" class="form-control mask-currency" name="valor" required placeholder="R$ 0,00">
+                <label class="form-label required">Valor do Projeto (R$)</label>
+                <input type="text" id="valorCREA" class="form-control mask-currency" name="valor" required placeholder="Ex.: R$ 5.000,00">
               </div>
               <div class="form-group full-width">
-                <label class="form-label required">Equipe</label>
-                <textarea id="equipeCREA" class="form-control" name="equipe" rows="2" required placeholder="Nomes da equipe"></textarea>
+                <label class="form-label required">Equipe do Projeto</label>
+                <textarea id="equipeCREA" class="form-control" name="equipe" rows="2" required placeholder="Ex.: Ana Silva, Carlos Lima, João Souza"></textarea>
               </div>
             </div>
+          </div>
+
+          <div class="form-section-block">
+            <h4 class="form-subtitle">🛠️ Atividades CREA</h4>
+            <div id="atividadesCREAContainer"></div>
+            <button type="button" class="btn btn-ghost-outline" id="btnAddAtividadeCREA">+ Adicionar Atividade</button>
           </div>
 
           <div class="form-section-block">
@@ -236,15 +234,10 @@
                 <input type="text" id="diretorioArquivoCREA" class="form-control" name="diretorioArquivo" required placeholder="Z:\servidor\arts\2026\boleto.pdf">
               </div>
               <div class="form-group full-width">
-                <label class="form-label required">Observações sobre documentos</label>
-                <input type="text" id="obsDocumentosCREA" class="form-control" name="obsDocumentos" required placeholder="Informações sobre documentos">
+                <label class="form-label">Observações sobre documentos</label>
+                <input type="text" id="obsDocumentosCREA" class="form-control" name="obsDocumentos" placeholder="Informações sobre documentos">
               </div>
             </div>
-          </div>
-
-          <div class="form-section-block">
-            <h4 class="form-subtitle">💬 Observações</h4>
-            <textarea id="observacoesCREA" class="form-control" name="observacoes" rows="3" required placeholder="Informações adicionais..."></textarea>
           </div>
 
           <div class="form-actions-row">
@@ -260,15 +253,11 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Nome do Solicitante</label>
-                <input type="text" id="solicitanteCRBio" class="form-control" name="solicitante" required>
+                <input type="text" id="solicitanteCRBio" class="form-control" name="solicitante" required placeholder="Ex.: Gustavo Toledo">
               </div>
               <div class="form-group">
-                <label class="form-label required">Data da Solicitação</label>
-                <input type="date" id="dataSolicitacaoCRBio" class="form-control" name="dataSolicitacao" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label required">Departamento</label>
-                <input type="text" id="departamentoCRBio" class="form-control" name="departamento" required>
+                <label class="form-label required">Prazo da Emissão da ART</label>
+                <input type="date" id="prazoEmissaoArtCRBio" class="form-control" name="prazoEmissaoArt" required>
               </div>
             </div>
           </div>
@@ -278,11 +267,15 @@
             <div class="form-grid">
               <div class="form-group full-width">
                 <label class="form-label required">Nome do Empreendimento</label>
-                <input type="text" id="nomeEmpreendimentoCRBio" class="form-control" name="nomeEmpreendimento" required placeholder="Digite o nome do empreendimento">
+                <div class="clockify-input-wrapper">
+                  <input type="text" id="nomeEmpreendimentoCRBio" class="form-control" name="nomeEmpreendimento" required
+                    placeholder="Digite o nome do empreendimento..." autocomplete="off">
+                  <div class="clockify-suggestions" id="clockifySuggestionsCRBio"></div>
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label required">Código do Clockfy</label>
-                <input type="text" id="codigoClockfyCRBio" class="form-control" name="codigoClockfy" required placeholder="Ex: #0001-1">
+              <div class="form-group full-width">
+                <label class="form-label required">Código do Clockify</label>
+                <input type="text" id="codigoClockfyCRBio" class="form-control" name="codigoClockfy" required readonly placeholder="Código do projeto (preenchido automaticamente)">
               </div>
             </div>
           </div>
@@ -292,7 +285,7 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Nome do Técnico</label>
-                <input type="text" id="nomeTecnicoCRBio" class="form-control" name="nomeTecnico" required>
+                <input type="text" id="nomeTecnicoCRBio" class="form-control" name="nomeTecnico" required placeholder="Ex.: Ana Silva">
               </div>
               <div class="form-group">
                 <label class="form-label required">Estado</label>
@@ -326,7 +319,7 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Nome do Contratante</label>
-                <input type="text" id="contratanteCRBio" class="form-control" name="contratante" required>
+                <input type="text" id="contratanteCRBio" class="form-control" name="contratante" required placeholder="Ex.: Empresa X Ltda.">
               </div>
               <div class="form-group">
                 <label class="form-label required">CNPJ</label>
@@ -334,49 +327,45 @@
               </div>
               <div class="form-group">
                 <label class="form-label required">E-mail</label>
-                <input type="email" id="emailCRBio" class="form-control" name="email" required>
+                <input type="email" id="emailCRBio" class="form-control" name="email" required placeholder="email@empresa.com">
               </div>
               <div class="form-group">
                 <label class="form-label required">Contato</label>
-                <input type="text" id="contatoCRBio" class="form-control mask-phone" name="contato" required>
+                <input type="text" id="contatoCRBio" class="form-control mask-phone" name="contato" required placeholder="(85) 99999-0000">
               </div>
               <div class="form-group full-width">
                 <label class="form-label required">Endereço</label>
-                <input type="text" id="enderecoCRBio" class="form-control" name="endereco" required>
+                <input type="text" id="enderecoCRBio" class="form-control" name="endereco" required placeholder="Ex.: Rua das Flores, 123">
               </div>
               <div class="form-group">
                 <label class="form-label required">Bairro</label>
-                <input type="text" id="bairroCRBio" class="form-control" name="bairro" required>
+                <input type="text" id="bairroCRBio" class="form-control" name="bairro" required placeholder="Ex.: Centro">
               </div>
               <div class="form-group">
                 <label class="form-label required">CEP</label>
-                <input type="text" id="cepCRBio" class="form-control mask-cep" name="cep" required>
+                <input type="text" id="cepCRBio" class="form-control mask-cep" name="cep" required placeholder="60000-000">
               </div>
               <div class="form-group full-width">
                 <label class="form-label required">Endereço da Obra</label>
-                <input type="text" id="enderecoObraCRBio" class="form-control" name="enderecoObra" required>
+                <input type="text" id="enderecoObraCRBio" class="form-control" name="enderecoObra" required placeholder="Ex.: Rodovia BR-101, km 45">
               </div>
               <div class="form-group">
                 <label class="form-label required">Bairro da Obra</label>
-                <input type="text" id="bairroObraCRBio" class="form-control" name="bairroObra" required>
+                <input type="text" id="bairroObraCRBio" class="form-control" name="bairroObra" required placeholder="Ex.: Distrito Industrial">
               </div>
               <div class="form-group">
                 <label class="form-label required">CEP da Obra</label>
-                <input type="text" id="cepObraCRBio" class="form-control mask-cep" name="cepObra" required>
+                <input type="text" id="cepObraCRBio" class="form-control mask-cep" name="cepObra" required placeholder="60000-000">
               </div>
             </div>
             <div class="form-grid">
               <div class="form-group">
-                <label class="form-label required">Identificação</label>
-                <input type="text" id="identificacaoCRBio" class="form-control" name="identificacao" required>
-              </div>
-              <div class="form-group">
                 <label class="form-label required">Localidade</label>
-                <input type="text" id="localidadeCRBio" class="form-control" name="localidade" required>
+                <input type="text" id="localidadeCRBio" class="form-control" name="localidade" required placeholder="Ex.: Município de Fortaleza - CE">
               </div>
               <div class="form-group full-width">
                 <label class="form-label required">Descrição Sumária</label>
-                <textarea id="descricaoSumariaCRBio" class="form-control" name="descricaoSumaria" rows="3" required></textarea>
+                <textarea id="descricaoSumariaCRBio" class="form-control" name="descricaoSumaria" rows="3" required placeholder="Ex.: Elaboração de estudo de impacto ambiental para implantação de usina eólica..."></textarea>
               </div>
               <div class="form-group">
                 <label class="form-label required">Formato de Execução</label>
@@ -392,35 +381,25 @@
                   <option>Sim</option><option>Não</option>
                 </select>
               </div>
-            </div>
-          </div>
-
-          <div class="form-section-block">
-            <h4 class="form-subtitle">📅 Prazo, Valor e Equipe</h4>
-            <div class="form-grid">
               <div class="form-group">
-                <label class="form-label required">Data do Início do Projeto </label>
+                <label class="form-label required">Data de Início do Projeto</label>
                 <input type="date" id="dataInicioCRBio" class="form-control" name="dataInicio" required>
               </div>
               <div class="form-group">
-                <label class="form-label required">Data do Fim do Projeto </label>
+                <label class="form-label required">Data do Fim do Projeto</label>
                 <input type="date" id="dataFimCRBio" class="form-control" name="dataFim" required>
               </div>
               <div class="form-group">
-                <label class="form-label required">Prazo Para Emissão da Art </label>
-                <input type="date" id="prazoEmissaoArtCRBio" class="form-control" name="prazoEmissaoArt" required>
+                <label class="form-label required">Horas do Projeto</label>
+                <input type="number" id="qtdHorasCRBio" class="form-control" name="qtdHoras" required min="0" placeholder="Ex.: 120">
               </div>
               <div class="form-group">
-                <label class="form-label required">Horas</label>
-                <input type="number" id="qtdHorasCRBio" class="form-control" name="qtdHoras" required min="0">
-              </div>
-              <div class="form-group">
-                <label class="form-label required">Valor (R$)</label>
-                <input type="text" id="valorCRBio" class="form-control mask-currency" name="valor" required placeholder="R$ 0,00">
+                <label class="form-label required">Valor do Projeto (R$)</label>
+                <input type="text" id="valorCRBio" class="form-control mask-currency" name="valor" required placeholder="Ex.: R$ 5.000,00">
               </div>
               <div class="form-group full-width">
-                <label class="form-label required">Equipe</label>
-                <textarea id="equipeCRBio" class="form-control" name="equipe" rows="2" required></textarea>
+                <label class="form-label required">Equipe do Projeto</label>
+                <textarea id="equipeCRBio" class="form-control" name="equipe" rows="2" required placeholder="Ex.: Ana Silva, Carlos Lima, João Souza"></textarea>
               </div>
             </div>
           </div>
@@ -433,15 +412,10 @@
                 <input type="text" id="diretorioArquivoCRBIO" class="form-control" name="diretorioArquivo" required placeholder="Z:\servidor\arts\2026\boleto.pdf">
               </div>
               <div class="form-group full-width">
-                <label class="form-label required">Observações sobre documentos</label>
-                <input type="text" id="obsDocumentosCRBIO" class="form-control" name="obsDocumentos" required placeholder="Informações sobre documentos">
+                <label class="form-label">Observações sobre documentos</label>
+                <input type="text" id="obsDocumentosCRBIO" class="form-control" name="obsDocumentos" placeholder="Informações sobre documentos">
               </div>
             </div>
-          </div>
-
-          <div class="form-section-block">
-            <h4 class="form-subtitle">💬 Observações</h4>
-            <textarea id="observacoesCRBio" class="form-control" name="observacoes" rows="3" required></textarea>
           </div>
 
           <div class="form-actions-row">
@@ -466,6 +440,7 @@
             <button class="filter-pill" data-status="Ajuste Pendente">Ajuste Pendente</button>
             <button class="filter-pill" data-status="Pagamento Programado">Enc. Financeiro</button>
             <button class="filter-pill" data-status="Pago">Pago</button>
+            <button class="filter-pill" data-status="ART Assinada">ART Assinada</button>
             <button class="filter-pill" data-status="Finalizado">Finalizado</button>
             <button class="filter-pill" data-status="Baixa Solicitada">Baixa Solicitada</button>
             <button class="filter-pill" data-status="Baixa da ART">Baixa da ART</button>
@@ -478,9 +453,6 @@
               <option value="">Conselho</option>
               <option value="CREA">CREA</option>
               <option value="CRBio">CRBio</option>
-            </select>
-            <select class="form-control filter-select" id="filterSetor">
-              <option value="">Setor</option>
             </select>
           </div>
           <div class="search-group">
@@ -496,9 +468,8 @@
                   <th>ID</th>
                   <th>Conselho</th>
                   <th>Solicitante</th>
-                  <th>Setor</th>
                   <th>Contratante</th>
-                  <th>Prazo</th>
+                  <th>Prazo para Emissão da ART</th>
                   <th>Status</th>
                   <th>Técnico</th>
                   <th>Ações</th>
@@ -587,14 +558,15 @@
         <div class="status-legend">
           <h4>Legenda de Status</h4>
           <div class="legend-items-wrapper">
-            <div class="legend-item"><span class="status-badge status-na-fila">NA FILA</span><span>Aguardando atribuição</span></div>
-            <div class="legend-item"><span class="status-badge status-processando">EM ANDAMENTO</span><span>Em produção</span></div>
-            <div class="legend-item"><span class="status-badge status-ajuste">AJUSTE PENDENTE</span><span>Solicitante pediu ajuste</span></div>
-            <div class="legend-item"><span class="status-badge status-pagamento">ENC. FINANCEIRO</span><span>Enc. para o Financeiro</span></div>
-            <div class="legend-item"><span class="status-badge status-pago">PAGO</span><span>Pagamento confirmado</span></div>
-            <div class="legend-item"><span class="status-badge status-finalizado">FINALIZADO</span><span>Pronto para entrega</span></div>
-            <div class="legend-item"><span class="status-badge status-baixa-solicitada">BAIXA SOLICITADA</span><span>Aguardando confirmação</span></div>
-            <div class="legend-item"><span class="status-badge status-baixa-art">BAIXA DA ART</span><span>ART encerrada</span></div>
+            <div class="legend-item"><span class="legend-dot status-na-fila"></span><span class="legend-text"><span class="legend-label">Na Fila</span><span class="legend-desc">Aguardando atribuição</span></span></div>
+            <div class="legend-item"><span class="legend-dot status-processando"></span><span class="legend-text"><span class="legend-label">Em Andamento</span><span class="legend-desc">Em produção</span></span></div>
+            <div class="legend-item"><span class="legend-dot status-ajuste"></span><span class="legend-text"><span class="legend-label">Ajuste Pendente</span><span class="legend-desc">Requer correção</span></span></div>
+            <div class="legend-item"><span class="legend-dot status-pagamento"></span><span class="legend-text"><span class="legend-label">Enc. Financeiro</span><span class="legend-desc">Aguardando pagamento</span></span></div>
+            <div class="legend-item"><span class="legend-dot status-pago"></span><span class="legend-text"><span class="legend-label">Pago</span><span class="legend-desc">Boleto CREA confirmado</span></span></div>
+            <div class="legend-item"><span class="legend-dot status-art-assinada"></span><span class="legend-text"><span class="legend-label">ART Assinada</span><span class="legend-desc">CRBio assinado</span></span></div>
+            <div class="legend-item"><span class="legend-dot status-finalizado"></span><span class="legend-text"><span class="legend-label">Finalizado</span><span class="legend-desc">Pronto para entrega</span></span></div>
+            <div class="legend-item"><span class="legend-dot status-baixa-solicitada"></span><span class="legend-text"><span class="legend-label">Baixa Solicitada</span><span class="legend-desc">Aguardando baixa</span></span></div>
+            <div class="legend-item"><span class="legend-dot status-baixa-art"></span><span class="legend-text"><span class="legend-label">Baixa da ART</span><span class="legend-desc">ART encerrada</span></span></div>
           </div>
         </div>
 

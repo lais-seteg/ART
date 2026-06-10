@@ -2,6 +2,10 @@
 const SUPABASE_URL = 'https://cbpthkoznhmlmbuynksn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_PG5hleeJ53FnP1S65_0WFQ_fUkAePiV';
 
+const CLOCKIFY_API_KEY = 'ODUwOThjOTUtYmJlNS00Nzg5LWI3NmYtYzRjYjZlZGE3NDIw';
+const CLOCKIFY_BASE_URL = 'https://api.clockify.me/api/v1';
+let projetosClockify = [];
+
 let _sb = null;
 try {
   const _supabaseCDN = window.supabase || window.supabaseJs;
@@ -84,7 +88,7 @@ const DOM = {
   kpis: {},
   filterPills: [],
   filterConselho: null,
-  filterSetor: null,
+  filterSetor: null, // removido — setor não existe mais
   loginModal: null,
   modalOverlay: null,
   statusModalOverlay: null,
@@ -121,7 +125,11 @@ const ICONS = {
   status: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
   excluir: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
   ajuste: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
-  baixa: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`
+  baixa: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+  finalizar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  confirmarBaixa: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>`,
+  pagar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
+  assinar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/><polyline points="17 8 20 11"/></svg>`
 };
 
 const ATIVIDADES_PROFISSIONAIS = [
@@ -140,9 +148,9 @@ const ATIVIDADES_PROFISSIONAIS = [
 
 // ✅ NOVO: Status permitidos por perfil
 const STATUS_POR_PERFIL = {
-  admin: ['Na fila', 'Processando', 'Ajuste Pendente', 'Pagamento Programado', 'Pago', 'Finalizado', 'Baixa Solicitada', 'Baixa da ART'],
+  admin: ['Na fila', 'Processando', 'Ajuste Pendente', 'Pagamento Programado', 'Pago', 'ART Assinada', 'Finalizado', 'Baixa Solicitada', 'Baixa da ART'],
   tecnico: ['Processando', 'Ajuste Pendente', 'Pagamento Programado', 'Baixa Solicitada', 'Baixa da ART', 'Finalizado'],
-  financeiro: ['Pagamento Programado', 'Pago', 'Finalizado']
+  financeiro: ['Pago', 'ART Assinada', 'Finalizado']
 };
 
 // ========== UTILITÁRIOS ==========
@@ -191,7 +199,8 @@ function getStatusClass(s) {
     'Pago': 'status-pago',
     'Finalizado': 'status-finalizado',
     'Baixa Solicitada': 'status-baixa-solicitada',
-    'Baixa da ART': 'status-baixa-art'
+    'Baixa da ART': 'status-baixa-art',
+    'ART Assinada': 'status-art-assinada'
   };
   return m[s] || 'status-na-fila';
 }
@@ -204,7 +213,7 @@ function formatarStatusExibicao(s) {
 // ✅ ATUALIZADO: Permissões com status permitidos e flag de atribuição
 function getPermissoes() {
   if (!AppState.usuarioAtual) {
-    return { podeEditar: false, podeExcluir: false, podeMudarStatus: false, podeVer: true, tipo: 'anonimo', statusPermitidos: [] };
+    return { podeEditar: false, podeExcluir: false, podeMudarStatus: false, podeVer: true, tipo: 'anonimo', tipoSolicitante: true, statusPermitidos: [] };
   }
   switch (AppState.usuarioAtual.tipo) {
     case 'admin':
@@ -347,13 +356,13 @@ function _atualizarLocal(solicitacaoId, dados) {
   return { solicitacao_id: solicitacaoId, ...dados };
 }
 
-async function adicionarHistoricoDB(solicitacaoId, acao, detalhes = '') {
+async function adicionarHistoricoDB(solicitacaoId, acao, detalhes = '', nomeOverride = null, tipoOverride = null) {
   const registro = {
     solicitacao_id: solicitacaoId,
     acao,
     detalhes,
-    usuario_nome: AppState.usuarioAtual?.nome || 'Sistema',
-    usuario_tipo: AppState.usuarioAtual?.tipo || 'anonimo'
+    usuario_nome: nomeOverride || AppState.usuarioAtual?.nome || 'Sistema',
+    usuario_tipo: tipoOverride || AppState.usuarioAtual?.tipo || 'anonimo'
   };
 
   if (!_sb) {
@@ -474,13 +483,17 @@ async function salvarSolicitacao() {
       delete dados.created_at;
       delete dados.updated_at;
 
+      dados.dataSolicitacao = new Date().toISOString().split('T')[0];
+
       const novoId = gerarNovoId();
       dados.solicitacao_id = novoId;
-      dados.status = 'Na fila';
+      dados.status = 'Processando';
+      dados.tecnico_responsavel = 'Henrique';
 
       const resultado = await salvarSolicitacaoDB(dados);
       if (!resultado?._local) {
-        showToast(`${novoId} criada com sucesso!`, 'success');
+        showToast(`${novoId} criada e encaminhada para Henrique!`, 'success');
+        await adicionarHistoricoDB(novoId, 'Atribuição Automática', 'Encaminhado para Henrique');
       }
     }
 
@@ -577,6 +590,33 @@ async function buscarNomePorCodigo(p_tipo, p_senha) {
     }
     return null;
   }
+}
+
+// ========== TEMA CLARO / ESCURO ==========
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+
+  // Troca logo
+  const logoImg = document.querySelector('.logo img');
+  if (logoImg) {
+    logoImg.src = theme === 'light' ? 'images/logo-preto.png' : 'images/LOGO.png';
+  }
+
+  // Troca ícone do slider
+  const slider = document.getElementById('themeSlider');
+  if (!slider) return;
+  if (theme === 'light') {
+    slider.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  } else {
+    slider.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  localStorage.setItem('sgart_theme', next);
 }
 
 // ========== INICIALIZAÇÃO ==========
@@ -1010,7 +1050,7 @@ function validarFormulario(tipo) {
   
   let ok = true;
   
-  p.querySelectorAll('.form-control').forEach(f => {
+  p.querySelectorAll('.form-control[required]').forEach(f => {
     if (f.closest('.hidden')) return;
     if (f.tagName === 'SELECT' || f.tagName === 'INPUT' || f.tagName === 'TEXTAREA') {
       if (!f.value.trim()) {
@@ -1101,7 +1141,6 @@ function renderizarTabela() {
   
   const fs = document.querySelector('.filter-pill.active')?.dataset.status || 'todas';
   const fc = DOM.filterConselho?.value || '';
-  const fse = DOM.filterSetor?.value || '';
   const bus = DOM.searchInput?.value.toLowerCase().trim() || '';
   const perms = getPermissoes();
   
@@ -1112,9 +1151,8 @@ function renderizarTabela() {
   dados = dados.filter(s => {
     if (fs !== 'todas' && s.status !== fs) return false;
     if (fc && s.tipo !== fc) return false;
-    if (fse && s.departamento !== fse) return false;
     if (bus) {
-      const t = [s.solicitacao_id, s.solicitante, s.contratante, s.nomeTecnico, s.departamento, s.tecnico_responsavel]
+      const t = [s.solicitacao_id, s.solicitante, s.contratante, s.nomeTecnico, s.tecnico_responsavel]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -1170,24 +1208,49 @@ function renderTableRow(s, perms) {
     a += `<button class="btn btn-ghost-sm" data-action="atribuir" data-id="${s.solicitacao_id}" title="Atribuir Técnico">${ICONS.atribuir}</button>`;
   }
 
-  if (perms.tipoTecnico && perms.podeEncaminharFinanceiro &&
-      s.status !== 'Pagamento Programado' && s.status !== 'Finalizado' &&
-      s.status !== 'Pago' && s.status !== 'Baixa Solicitada' && s.status !== 'Baixa da ART') {
-    a += `<button class="btn btn-ghost-sm btn-encaminhar" data-action="encaminhar-financeiro" data-id="${s.solicitacao_id}" title="Enviar para o Financeiro">${ICONS.encaminhar}<span class="btn-label">Enviar</span></button>`;
+  if (perms.tipoTecnico) {
+    const statusAtivos = !['Pagamento Programado', 'Finalizado', 'Pago', 'ART Assinada', 'Baixa Solicitada', 'Baixa da ART'].includes(s.status);
+    if (statusAtivos && perms.podeEncaminharFinanceiro) {
+      a += `<button class="btn btn-ghost-sm btn-encaminhar" data-action="encaminhar-financeiro" data-id="${s.solicitacao_id}" title="Enviar para o Financeiro">${ICONS.encaminhar}</button>`;
+    }
+    if (!['Finalizado', 'Baixa Solicitada', 'Baixa da ART'].includes(s.status)) {
+      a += `<button class="btn btn-ghost-sm" data-action="finalizar" data-id="${s.solicitacao_id}" title="Finalizar">${ICONS.finalizar}</button>`;
+    }
+    if (s.status === 'Baixa Solicitada') {
+      a += `<button class="btn btn-ghost-sm" data-action="confirmar-baixa" data-id="${s.solicitacao_id}" title="Confirmar Baixa da ART">${ICONS.confirmarBaixa}</button>`;
+    }
   }
 
-  if (perms.podeMudarStatus) {
-    a += `<button class="btn btn-ghost-sm" data-action="status" data-id="${s.solicitacao_id}" title="Alterar Status">${ICONS.status}</button>`;
+  if (perms.tipoFinanceiro) {
+    if (s.status === 'Pagamento Programado') {
+      if (s.tipo === 'CREA') {
+        a += `<button class="btn btn-ghost-sm" data-action="pagar" data-id="${s.solicitacao_id}" title="Marcar como Pago">${ICONS.pagar}</button>`;
+      } else {
+        a += `<button class="btn btn-ghost-sm" data-action="assinar-art" data-id="${s.solicitacao_id}" title="Assinar ART">${ICONS.assinar}</button>`;
+      }
+    }
   }
 
-  if (perms.podeExcluir) {
-    a += `<button class="btn btn-ghost-sm" data-action="excluir" data-id="${s.solicitacao_id}" title="Excluir">${ICONS.excluir}</button>`;
+  if (perms.tipoAdmin) {
+    if (perms.podeMudarStatus) {
+      a += `<button class="btn btn-ghost-sm" data-action="status" data-id="${s.solicitacao_id}" title="Alterar Status">${ICONS.status}</button>`;
+    }
+    if (perms.podeExcluir) {
+      a += `<button class="btn btn-ghost-sm" data-action="excluir" data-id="${s.solicitacao_id}" title="Excluir">${ICONS.excluir}</button>`;
+    }
   }
 
-  if (s.status !== 'Finalizado' && s.status !== 'Pago' && s.status !== 'Na fila' && s.status !== 'Baixa Solicitada' && s.status !== 'Baixa da ART') {
+  const statusTerminal = ['Finalizado', 'Baixa Solicitada', 'Baixa da ART'];
+  if ((perms.tipoAdmin || perms.tipoSolicitante) && s.status === 'Processando') {
+    a += `<button class="btn btn-ghost-sm" data-action="ajuste" data-id="${s.solicitacao_id}" title="Solicitar Ajuste">${ICONS.ajuste}</button>`;
+  } else if (perms.tipoTecnico && !statusTerminal.includes(s.status)) {
     a += `<button class="btn btn-ghost-sm" data-action="ajuste" data-id="${s.solicitacao_id}" title="Solicitar Ajuste">${ICONS.ajuste}</button>`;
   }
+  if ((perms.tipoSolicitante || perms.tipoAdmin) && s.status === 'Ajuste Pendente') {
+    a += `<button class="btn btn-ghost-sm" data-action="ajuste-realizado" data-id="${s.solicitacao_id}" title="Marcar Ajuste Realizado">${ICONS.finalizar}</button>`;
+  }
 
+  // Baixa disponível para qualquer pessoa quando status = Finalizado
   if (s.status === 'Finalizado' && !s.baixa_solicitada) {
     a += `<button class="btn btn-ghost-sm" data-action="baixa" data-id="${s.solicitacao_id}" title="Solicitar Baixa da ART">${ICONS.baixa}</button>`;
   }
@@ -1197,7 +1260,6 @@ function renderTableRow(s, perms) {
     <td><strong>${sf(s.solicitacao_id)}</strong></td>
     <td><span class="conselho-badge ${cc}">${sf(s.tipo)}</span></td>
     <td>${sf(s.solicitante)}</td>
-    <td>${sf(s.departamento)}</td>
     <td>${sf(s.contratante)}</td>
     <td>${formatarDataBR(s.prazoEmissaoArt)}</td>
     <td><span class="status-badge ${sc}">${sf(formatarStatusExibicao(s.status))}</span></td>
@@ -1248,7 +1310,7 @@ function atualizarKPIs() {
     Processando: dados.filter(s => s.status === 'Processando').length,
     Ajuste: dados.filter(s => s.status === 'Ajuste Pendente').length,
     Pagamento: dados.filter(s => s.status === 'Pagamento Programado').length,
-    Pago: dados.filter(s => s.status === 'Pago').length,
+    Pago: dados.filter(s => s.status === 'Pago' || s.status === 'ART Assinada').length,
     Finalizado: dados.filter(s => s.status === 'Finalizado').length,
     Baixa: dados.filter(s => s.status === 'Baixa da ART' || s.status === 'Baixa Solicitada').length
   };
@@ -1259,20 +1321,6 @@ function atualizarKPIs() {
   });
 }
 
-function atualizarFiltroSetores() {
-  const s = DOM.filterSetor;
-  if (!s) return;
-  
-  const st = [...new Set(AppState.solicitacoes.map(x => x.departamento).filter(Boolean))].sort();
-  const v = s.value;
-  
-  s.innerHTML = '<option value="">Setor</option>';
-  st.forEach(x => {
-    s.innerHTML += `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`;
-  });
-  
-  s.value = v;
-}
 
 // ✅ NOVO: Atualizar notificações para financeiro
 function atualizarNotificacoesFinanceiro() {
@@ -1322,119 +1370,168 @@ async function verDetalhes(id) {
   
   if (mt) mt.textContent = `Detalhes – ${s.solicitacao_id} (${s.tipo})`;
   const sf = str => escapeHtml(str || '—');
-  
+
+  // ── Cabeçalho ──────────────────────────────────────────────
   let h = `
     <div class="detail-grid">
       <div class="detail-item"><span class="detail-label">Solicitante</span><span class="detail-value">${sf(s.solicitante)}</span></div>
       <div class="detail-item"><span class="detail-label">Data Solicitação</span><span class="detail-value">${formatarDataBR(s.dataSolicitacao)}</span></div>
-      <div class="detail-item"><span class="detail-label">Departamento</span><span class="detail-value">${sf(s.departamento)}</span></div>
+      <div class="detail-item"><span class="detail-label">Prazo da Emissão da ART</span><span class="detail-value">${formatarDataBR(s.prazoEmissaoArt)}</span></div>
       <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value"><span class="status-badge ${getStatusClass(s.status)}">${sf(formatarStatusExibicao(s.status))}</span></span></div>
     </div>
-    
+
+    <!-- ── Informações do Projeto ── -->
     <div class="detail-section-title">📋 Informações do Projeto</div>
     <div class="detail-grid">
-      <div class="detail-item full-width"><span class="detail-label">Empreendimento</span><span class="detail-value">${sf(s.nomeEmpreendimento)}</span></div>
-      <div class="detail-item"><span class="detail-label">Código Clockfy</span><span class="detail-value">${sf(s.codigoClockfy)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Nome do Empreendimento</span><span class="detail-value">${sf(s.nomeEmpreendimento)}</span></div>
+      <div class="detail-item"><span class="detail-label">Código Clockify</span><span class="detail-value">${sf(s.codigoClockfy)}</span></div>
     </div>
-    
-    <div class="detail-section-title">🔧 Técnico</div>
+
+    <!-- ── Informações do Técnico ── -->
+    <div class="detail-section-title">🔧 Informações do Técnico</div>
     <div class="detail-grid">
-      <div class="detail-item"><span class="detail-label">Nome</span><span class="detail-value">${sf(s.nomeTecnico)}</span></div>
-      <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value">${sf(s.estado)}</span></div>
-      ${s.tecnico_responsavel ? `<div class="detail-item"><span class="detail-label">Responsável</span><span class="detail-value">${sf(s.tecnico_responsavel)}</span></div>` : ''}
-    </div>
-    
-    <div class="detail-section-title">👤 Contratante</div>
+      <div class="detail-item"><span class="detail-label">Nome do Técnico Responsável</span><span class="detail-value">${sf(s.nomeTecnico)}</span></div>
+      <div class="detail-item"><span class="detail-label">Estado (UF)</span><span class="detail-value">${sf(s.estado)}</span></div>
+      ${s.tecnico_responsavel ? `<div class="detail-item"><span class="detail-label">Técnico Responsável</span><span class="detail-value">${sf(s.tecnico_responsavel)}</span></div>` : ''}
+    </div>`;
+
+  // ── Vínculo ACMB (CRBio) ───────────────────────────────────
+  if (s.tipo === 'CRBio') {
+    h += `
+    <div class="detail-section-title">🔗 Vínculo ACMB</div>
     <div class="detail-grid">
-      <div class="detail-item full-width"><span class="detail-label">Nome</span><span class="detail-value">${sf(s.contratante)}</span></div>
+      <div class="detail-item"><span class="detail-label">Vinculado à ACMB?</span><span class="detail-value">${(s.vinculado_acmb || s.vinculadoACMB) === 'sim' ? 'Sim' : 'Não'}</span></div>
+    </div>`;
+  }
+
+  // ── Informações para Emissão da ART ───────────────────────
+  h += `
+    <div class="detail-section-title">📋 Informações para Emissão da ART</div>
+    <div class="detail-grid">
+      <div class="detail-item full-width"><span class="detail-label">Nome do Contratante</span><span class="detail-value">${sf(s.contratante)}</span></div>
       <div class="detail-item"><span class="detail-label">CNPJ</span><span class="detail-value">${sf(s.cnpj)}</span></div>
-      <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value">${sf(s.email)}</span></div>
+      <div class="detail-item"><span class="detail-label">E-mail</span><span class="detail-value">${sf(s.email)}</span></div>
       <div class="detail-item"><span class="detail-label">Contato</span><span class="detail-value">${sf(s.contato)}</span></div>
-      <div class="detail-item full-width"><span class="detail-label">Endereço</span><span class="detail-value">${sf(s.endereco)}, ${sf(s.bairro)}, ${sf(s.cep)}</span></div>
-    </div>
-    
-    <div class="detail-section-title">📍 Endereço da Obra</div>
-    <div class="detail-grid">
-      <div class="detail-item full-width"><span class="detail-label">Endereço</span><span class="detail-value">${sf(s.enderecoObra)}</span></div>
-      <div class="detail-item"><span class="detail-label">Bairro</span><span class="detail-value">${sf(s.bairroObra)}</span></div>
-      <div class="detail-item"><span class="detail-label">CEP</span><span class="detail-value">${sf(s.cepObra)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Endereço do Contratante</span><span class="detail-value">${sf(s.endereco)}, ${sf(s.bairro)} – CEP ${sf(s.cep)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Endereço da Obra</span><span class="detail-value">${sf(s.enderecoObra)}</span></div>
+      <div class="detail-item"><span class="detail-label">Bairro da Obra</span><span class="detail-value">${sf(s.bairroObra)}</span></div>
+      <div class="detail-item"><span class="detail-label">CEP da Obra</span><span class="detail-value">${sf(s.cepObra)}</span></div>
       ${s.latitude ? `<div class="detail-item"><span class="detail-label">Latitude</span><span class="detail-value">${sf(s.latitude)}</span></div>` : ''}
-      ${s.longitude ? `<div class="detail-item"><span class="detail-label">Longitude</span><span class="detail-value">${sf(s.longitude)}</span></div>` : ''}
-    </div>
-    
-    <div class="detail-section-title">📅 Prazo e Valor</div>
-    <div class="detail-grid">
-      <div class="detail-item"><span class="detail-label">Início</span><span class="detail-value">${formatarDataBR(s.dataInicio)}</span></div>
-      <div class="detail-item"><span class="detail-label">Fim</span><span class="detail-value">${formatarDataBR(s.dataFim)}</span></div>
-      <div class="detail-item"><span class="detail-label">Prazo ART</span><span class="detail-value">${formatarDataBR(s.prazoEmissaoArt)}</span></div>
-      <div class="detail-item"><span class="detail-label">Horas</span><span class="detail-value">${sf(s.qtdHoras)}</span></div>
-      <div class="detail-item"><span class="detail-label">Valor</span><span class="detail-value">${formatarMoedaBR(s.valor)}</span></div>
-    </div>
-    
-    <div class="detail-item full-width" style="margin-top: 0.5rem;">
-      <span class="detail-label">Equipe</span>
-      <span class="detail-value">${sf(s.equipe)}</span>
-    </div>
-    
-    ${s.atividades && s.atividades.length > 0 ? `
-    <div class="detail-section-title">🛠️ Atividades</div>
-    ${s.atividades.map((att, i) => `
-      <div style="background: var(--bg-secondary); padding: 0.8rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem;">
-        <div style="font-weight: 600; color: var(--orange); margin-bottom: 0.3rem;">Atividade ${i+1}</div>
-        <div style="font-size: 0.85rem; color: var(--text-secondary);">${sf(att.nivel)} › ${sf(att.atividadeProfissional)}</div>
-        <div style="font-size:0.8rem; color: var(--text-muted); margin-top: 0.2rem;">${sf(att.descricaoServico)}</div>
-      </div>
-    `).join('')}
-    ` : ''}
-    
-    <div class="detail-section-title">📁 Documentos</div>
-    <div class="detail-grid">
-      <div class="detail-item full-width"><span class="detail-label">Local dos Arquivos</span><span class="detail-value">${sf(s.diretorioArquivo)}</span></div>
-      <div class="detail-item full-width"><span class="detail-label">Observações</span><span class="detail-value">${sf(s.obsDocumentos)}</span></div>
-    </div>
-    
-    ${s.observacoes ? `
-    <div class="detail-section-title">💬 Observações Gerais</div>
-    <div class="detail-item full-width">
-      <span class="detail-value" style="white-space: pre-wrap;">${sf(s.observacoes)}</span>
-    </div>
-    ` : ''}
-    
-    ${s.tipo === 'CRBio' ? `
-    <div class="detail-section-title">🔗 CRBio</div>
-    <div class="detail-grid">
-      <div class="detail-item"><span class="detail-label">Vinculado ACMB</span><span class="detail-value">${(s.vinculado_acmb || s.vinculadoACMB) === 'sim' ? 'Sim' : 'Não'}</span></div>
-      <div class="detail-item"><span class="detail-label">Identificação</span><span class="detail-value">${sf(s.identificacao)}</span></div>
+      ${s.longitude ? `<div class="detail-item"><span class="detail-label">Longitude</span><span class="detail-value">${sf(s.longitude)}</span></div>` : ''}`;
+
+  // Campos exclusivos CRBio dentro da mesma seção
+  if (s.tipo === 'CRBio') {
+    h += `
       <div class="detail-item"><span class="detail-label">Localidade</span><span class="detail-value">${sf(s.localidade)}</span></div>
-      <div class="detail-item"><span class="detail-label">Formato</span><span class="detail-value">${sf(s.formatoExecucao)}</span></div>
-    </div>
-    <div class="detail-item full-width">
-      <span class="detail-label">Descrição Sumária</span>
-      <span class="detail-value">${sf(s.descricaoSumaria)}</span>
-    </div>
-    ` : ''}
-  `;
-  
-  const hist = await carregarHistoricoDB(id);
-  if (hist.length > 0) {
-    h += `<div class="history-timeline"><div class="history-title">📜 Histórico</div>`;
-    hist.forEach(x => {
-      h += `<div class="history-item">
-        <div class="history-date">${formatarDataHoraBR(x.created_at)}</div>
-        <div class="history-user">${sf(x.usuario_nome)} (${x.usuario_tipo})</div>
-        <div class="history-action">${sf(x.acao)}${x.detalhes ? ' – ' + sf(x.detalhes) : ''}</div>
+      <div class="detail-item full-width"><span class="detail-label">Descrição Sumária</span><span class="detail-value">${sf(s.descricaoSumaria)}</span></div>
+      <div class="detail-item"><span class="detail-label">Formato de Execução</span><span class="detail-value">${sf(s.formatoExecucao)}</span></div>
+      <div class="detail-item"><span class="detail-label">Meio Ambiente e Biodiversidade</span><span class="detail-value">${sf(s.meioAmbiente)}</span></div>`;
+  }
+
+  h += `
+      <div class="detail-item"><span class="detail-label">Data de Início do Projeto</span><span class="detail-value">${formatarDataBR(s.dataInicio)}</span></div>
+      <div class="detail-item"><span class="detail-label">Data do Fim do Projeto</span><span class="detail-value">${formatarDataBR(s.dataFim)}</span></div>
+      <div class="detail-item"><span class="detail-label">Horas do Projeto</span><span class="detail-value">${sf(s.qtdHoras)}</span></div>
+      <div class="detail-item"><span class="detail-label">Valor do Projeto</span><span class="detail-value">${formatarMoedaBR(s.valor)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Equipe do Projeto</span><span class="detail-value">${sf(s.equipe)}</span></div>
+    </div>`;
+
+  // ── Atividades CREA ────────────────────────────────────────
+  if (s.tipo === 'CREA' && s.atividades && s.atividades.length > 0) {
+    h += `<div class="detail-section-title">🛠️ Atividades CREA</div>`;
+    s.atividades.forEach((att, i) => {
+      h += `
+      <div style="background:var(--bg-secondary);padding:0.8rem;border-radius:var(--radius-sm);margin-bottom:0.5rem;">
+        <div style="font-weight:600;color:var(--orange);margin-bottom:0.3rem;">Atividade ${i + 1}</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">${sf(att.nivel)} › ${sf(att.atividadeProfissional)}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">${sf(att.descricaoServico)}</div>
       </div>`;
     });
-    h += `</div>`;
   }
+
+  // ── Arquivos Finais ────────────────────────────────────────
+  h += `
+    <div class="detail-section-title">📁 Arquivos Finais</div>
+    <div class="detail-grid">
+      <div class="detail-item full-width"><span class="detail-label">Local do Boleto / ART / Documentos</span><span class="detail-value">${sf(s.diretorioArquivo)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Observações sobre Documentos</span><span class="detail-value">${sf(s.obsDocumentos)}</span></div>
+    </div>`;
+
+  if (s.observacoes) {
+    h += `
+    <div class="detail-section-title">💬 Observações Gerais</div>
+    <div class="detail-item full-width"><span class="detail-value" style="white-space:pre-wrap;">${sf(s.observacoes)}</span></div>`;
+  }
+  h += ``;
+  
+  const hist = await carregarHistoricoDB(id);
+  h += `<div class="history-timeline"><div class="history-title">📜 Histórico</div>`;
+  hist.forEach(x => {
+    h += `<div class="history-item">
+      <div class="history-date">${formatarDataHoraBR(x.created_at)}</div>
+      <div class="history-user">${sf(x.usuario_nome)} (${x.usuario_tipo})</div>
+      <div class="history-action">${sf(x.acao)}${x.detalhes ? ' – ' + sf(x.detalhes) : ''}</div>
+    </div>`;
+  });
+
+  // Entrada fixa de criação — sempre aparece por último
+  const diaCriacao = s.dataSolicitacao
+    ? new Date(s.dataSolicitacao + 'T00:00:00').toLocaleDateString('pt-BR', {
+        timeZone: CONFIG.TIMEZONE,
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    : '—';
+  h += `<div class="history-item history-item-criacao">
+    <div class="history-date">${diaCriacao}</div>
+    <div class="history-user">${sf(s.solicitante)}</div>
+    <div class="history-action">Solicitação criada</div>
+  </div>`;
+
+  h += `</div>`;
   
   if (mb) mb.innerHTML = h;
   
   let ft = `<button class="btn btn-ghost" onclick="fecharModal(event)">Fechar</button>`;
   const perms = getPermissoes();
-  if (perms.tipoAdmin) ft += `<button class="btn btn-primary" onclick="fecharModal(event);abrirEditModal('${s.solicitacao_id}')">Atribuir Técnico</button>`;
-  if (perms.podeMudarStatus) ft += `<button class="btn btn-primary" onclick="fecharModal(event);abrirModalStatus('${s.solicitacao_id}')">Alterar Status</button>`;
-  
+  if (perms.tipoAdmin) {
+    ft += `<button class="btn btn-primary" onclick="fecharModal(event);abrirEditModal('${s.solicitacao_id}')">Atribuir Técnico</button>`;
+    ft += `<button class="btn btn-primary" onclick="fecharModal(event);abrirModalStatus('${s.solicitacao_id}')">Alterar Status</button>`;
+  }
+  if (perms.tipoTecnico) {
+    const statusAtivos = !['Pagamento Programado','Finalizado','Pago','ART Assinada','Baixa Solicitada','Baixa da ART'].includes(s.status);
+    if (statusAtivos && perms.podeEncaminharFinanceiro) {
+      ft += `<button class="btn btn-secondary" onclick="fecharModal(event);encaminharAoFinanceiro('${s.solicitacao_id}')">${ICONS.encaminhar} Enc. Financeiro</button>`;
+    }
+    if (!['Finalizado','Baixa Solicitada','Baixa da ART'].includes(s.status)) {
+      ft += `<button class="btn btn-success" onclick="fecharModal(event);finalizarSolicitacao('${s.solicitacao_id}')">${ICONS.finalizar} Finalizar</button>`;
+      ft += `<button class="btn btn-warning" onclick="fecharModal(event);abrirAjusteModal('${s.solicitacao_id}')">${ICONS.ajuste} Solicitar Ajuste</button>`;
+    }
+    if (s.status === 'Baixa Solicitada') {
+      ft += `<button class="btn btn-primary" onclick="fecharModal(event);confirmarBaixaART('${s.solicitacao_id}')">${ICONS.confirmarBaixa} Confirmar Baixa da ART</button>`;
+    }
+  }
+  if ((perms.tipoAdmin || perms.tipoSolicitante) && s.status === 'Processando') {
+    ft += `<button class="btn btn-warning" onclick="fecharModal(event);abrirAjusteModal('${s.solicitacao_id}')">${ICONS.ajuste} Solicitar Ajuste</button>`;
+  }
+  if ((perms.tipoSolicitante || perms.tipoAdmin) && s.status === 'Ajuste Pendente') {
+    ft += `<button class="btn btn-success" onclick="fecharModal(event);ajusteRealizado('${s.solicitacao_id}')">${ICONS.finalizar} Ajuste Realizado</button>`;
+  }
+  if (perms.tipoFinanceiro && s.status === 'Pagamento Programado') {
+    if (s.tipo === 'CREA') {
+      ft += `<button class="btn btn-success" onclick="fecharModal(event);pagarSolicitacao('${s.solicitacao_id}')">${ICONS.pagar} Pago</button>`;
+    } else {
+      ft += `<button class="btn btn-success" onclick="fecharModal(event);assinarArt('${s.solicitacao_id}')">${ICONS.assinar} ART Assinada</button>`;
+    }
+  }
+
+  // Baixa disponível para qualquer pessoa quando status = Finalizado
+  if (s.status === 'Finalizado' && !s.baixa_solicitada) {
+    ft += `<button class="btn btn-secondary" onclick="fecharModal(event);abrirBaixaModal('${s.solicitacao_id}')">${ICONS.baixa} Solicitar Baixa da ART</button>`;
+  }
+
   if (mf) mf.innerHTML = ft;
   if (DOM.modalOverlay) DOM.modalOverlay.classList.add('active');
 }
@@ -1553,7 +1650,7 @@ function abrirModalStatus(id) {
   
   const perms = getPermissoes();
   // ✅ NOVO: Usar status permitidos por perfil
-  const statusList = perms.statusPermitidos || ['Na fila', 'Processando', 'Ajuste Pendente', 'Pagamento Programado', 'Pago', 'Finalizado', 'Baixa Solicitada', 'Baixa da ART'];
+  const statusList = perms.statusPermitidos || ['Na fila', 'Processando', 'Ajuste Pendente', 'Pagamento Programado', 'Pago', 'ART Assinada', 'Finalizado', 'Baixa Solicitada', 'Baixa da ART'];
   
   if (mb) mb.innerHTML = `
     <div class="form-group">
@@ -1633,10 +1730,13 @@ async function salvarAjuste(id) {
     showToast('Descreva o ajuste necessário.', 'error');
     return;
   }
-  
+
   try {
+    const sol = AppState.solicitacoes.find(x => x.solicitacao_id === id);
+    const nomeOverride = !AppState.usuarioAtual ? (sol?.solicitante || 'Solicitante') : null;
+    const tipoOverride = !AppState.usuarioAtual ? 'solicitante' : null;
     await atualizarSolicitacaoDB(id, { status: 'Ajuste Pendente', ajuste_descricao: descricao });
-    await adicionarHistoricoDB(id, 'Ajuste Solicitado', descricao);
+    await adicionarHistoricoDB(id, 'Ajuste Solicitado', descricao, nomeOverride, tipoOverride);
     showToast('Ajuste solicitado com sucesso!', 'success');
     AppState.solicitacoes = await carregarSolicitacoesDB();
     renderizarTabela();
@@ -1645,6 +1745,23 @@ async function salvarAjuste(id) {
   } catch(e) {
     console.error('Erro ao solicitar ajuste:', e);
     showToast('Erro ao solicitar ajuste.', 'error');
+  }
+}
+
+async function ajusteRealizado(id) {
+  try {
+    const sol = AppState.solicitacoes.find(x => x.solicitacao_id === id);
+    const nome = AppState.usuarioAtual?.nome || sol?.solicitante || 'Solicitante';
+    const tipo = AppState.usuarioAtual?.tipo || 'solicitante';
+    await atualizarSolicitacaoDB(id, { status: 'Na fila', ajuste_descricao: null });
+    await adicionarHistoricoDB(id, 'Ajuste Realizado', 'Solicitante confirmou que o ajuste foi feito', nome, tipo);
+    showToast('Ajuste marcado como realizado. Solicitação voltou para a fila.', 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
+  } catch(e) {
+    console.error('Erro ao confirmar ajuste:', e);
+    showToast('Erro ao confirmar ajuste realizado.', 'error');
   }
 }
 
@@ -1697,7 +1814,7 @@ async function salvarBaixa(id) {
       data_baixa: data,
       baixa_solicitante: solicitante // ✅ NOVO: Salva o nome do solicitante
     });
-    await adicionarHistoricoDB(id, 'Baixa Solicitada', `Solicitante: ${solicitante} - ${motivo}`);
+    await adicionarHistoricoDB(id, 'Baixa Solicitada', motivo, solicitante, 'solicitante');
     showToast('Baixa solicitada! Técnico responsável será notificado.', 'success');
     AppState.solicitacoes = await carregarSolicitacoesDB();
     renderizarTabela();
@@ -1753,9 +1870,6 @@ function confirmarAcaoCancel() {
 
 // ✅ NOVO: Função para técnico encaminhar ao financeiro (COM MODAL CUSTOMIZADO)
 async function encaminharAoFinanceiro(id) {
-  const confirmou = await confirmarAcao('Encaminhar esta solicitação ao setor financeiro para pagamento?', 'Encaminhar ao Financeiro');
-  if (!confirmou) return;
-  
   try {
     await atualizarSolicitacaoDB(id, {
       status: 'Pagamento Programado',
@@ -1770,6 +1884,59 @@ async function encaminharAoFinanceiro(id) {
   } catch(e) {
     console.error('Erro ao encaminhar:', e);
     showToast('Erro ao encaminhar ao financeiro.', 'error');
+  }
+}
+
+async function finalizarSolicitacao(id) {
+  try {
+    await atualizarSolicitacaoDB(id, { status: 'Finalizado' });
+    await adicionarHistoricoDB(id, 'Finalizado', `Finalizado por ${AppState.usuarioAtual?.nome || 'Técnico'}`);
+    showToast('Solicitação finalizada!', 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
+  } catch(e) {
+    showToast('Erro ao finalizar.', 'error');
+  }
+}
+
+async function confirmarBaixaART(id) {
+  try {
+    await atualizarSolicitacaoDB(id, { status: 'Baixa da ART' });
+    await adicionarHistoricoDB(id, 'Baixa da ART', `Baixa confirmada por ${AppState.usuarioAtual?.nome || 'Técnico'}`);
+    showToast('Baixa da ART confirmada!', 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
+  } catch(e) {
+    console.error('Erro ao confirmar baixa:', e);
+    showToast('Erro ao confirmar baixa da ART.', 'error');
+  }
+}
+
+async function pagarSolicitacao(id) {
+  try {
+    await atualizarSolicitacaoDB(id, { status: 'Pago' });
+    await adicionarHistoricoDB(id, 'Pago', `Pago por ${AppState.usuarioAtual?.nome || 'Financeiro'}`);
+    showToast('Marcado como Pago!', 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
+  } catch(e) {
+    showToast('Erro ao registrar pagamento.', 'error');
+  }
+}
+
+async function assinarArt(id) {
+  try {
+    await atualizarSolicitacaoDB(id, { status: 'ART Assinada' });
+    await adicionarHistoricoDB(id, 'ART Assinada', `Assinada por ${AppState.usuarioAtual?.nome || 'Financeiro'}`);
+    showToast('ART marcada como Assinada!', 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
+  } catch(e) {
+    showToast('Erro ao registrar assinatura da ART.', 'error');
   }
 }
 
@@ -1828,7 +1995,7 @@ function configurarEventListeners() {
     const t = this.value;
     if (DOM.formCREA) DOM.formCREA.classList.add('hidden');
     if (DOM.formCRBio) DOM.formCRBio.classList.add('hidden');
-    
+
     if (t === 'CREA') {
       if (DOM.formCREA) DOM.formCREA.classList.remove('hidden');
       if (!DOM.atividadesCREAContainer?.querySelector('.atividade-card')) {
@@ -1837,6 +2004,8 @@ function configurarEventListeners() {
     } else if (t === 'CRBio') {
       if (DOM.formCRBio) DOM.formCRBio.classList.remove('hidden');
     }
+
+    // dataSolicitacao é salvo automaticamente ao submeter, não é campo visível
   });
   
   DOM.artForm?.addEventListener('submit', e => {
@@ -1907,9 +2076,14 @@ function configurarEventListeners() {
       status: () => abrirModalStatus(id),
       excluir: () => excluirSolicitacao(id),
       ajuste: () => abrirAjusteModal(id),
+      'ajuste-realizado': () => ajusteRealizado(id),
       baixa: () => abrirBaixaModal(id),
       // ✅ NOVO: Ação para técnico encaminhar ao financeiro
-      'encaminhar-financeiro': () => encaminharAoFinanceiro(id)
+      'encaminhar-financeiro': () => encaminharAoFinanceiro(id),
+      'finalizar': () => finalizarSolicitacao(id),
+      'confirmar-baixa': () => confirmarBaixaART(id),
+      'pagar': () => pagarSolicitacao(id),
+      'assinar-art': () => assinarArt(id)
     };
     if (ac[a]) ac[a]();
   });
@@ -1965,6 +2139,116 @@ function configurarEventListeners() {
   });
   
   DOM.btnAddAtividadeCREA?.addEventListener('click', adicionarAtividadeCREA);
+
+  // Clockify: autocomplete customizado com debounce
+  configurarClockifyAutocomplete();
+}
+
+function normalizar(str) {
+  return (str || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+}
+
+function filtrarProjetosClockify(texto) {
+  const t = normalizar(texto);
+  if (t.length < 2) return [];
+  return projetosClockify
+    .filter(p =>
+      normalizar(p._nome).includes(t) ||
+      normalizar(p._code).includes(t) ||
+      normalizar(p.clientName || '').includes(t) ||
+      normalizar(p.name).includes(t)
+    )
+    .slice(0, 12);
+}
+
+function mostrarSugestoesClockify(tipo, projetos, estado) {
+  const box = document.getElementById(`clockifySuggestions${tipo}`);
+  if (!box) return;
+
+  if (estado === 'loading') {
+    box.innerHTML = `<div class="clockify-suggestion-msg">Buscando projetos...</div>`;
+  } else if (estado === 'empty') {
+    box.innerHTML = `<div class="clockify-suggestion-msg">Nenhum projeto encontrado</div>`;
+  } else {
+    box.innerHTML = projetos.map(p => {
+      const nome = escapeHtml(p._nome);
+      const code = escapeHtml(p._code);
+      return `<div class="clockify-suggestion-item" data-id="${escapeHtml(p.id)}" data-nome="${nome}" data-code="${code}">
+        <span class="suggestion-nome">${nome}</span>
+        <span class="suggestion-code">${code}</span>
+      </div>`;
+    }).join('');
+  }
+  box.classList.add('active');
+}
+
+function esconderSugestoesClockify(tipo) {
+  const box = document.getElementById(`clockifySuggestions${tipo}`);
+  if (box) box.classList.remove('active');
+}
+
+function configurarClockifyAutocomplete() {
+  ['CREA', 'CRBio'].forEach(tipo => {
+    const nomeField = document.getElementById(`nomeEmpreendimento${tipo}`);
+    const codeField = document.getElementById(`codigoClockfy${tipo}`);
+    const suggestionsBox = document.getElementById(`clockifySuggestions${tipo}`);
+    if (!nomeField || !codeField || !suggestionsBox) return;
+
+    const buscarComDebounce = debounce((texto) => {
+      if (!texto.trim() || texto.trim().length < 2) {
+        esconderSugestoesClockify(tipo);
+        return;
+      }
+      if (!projetosClockify.length) {
+        mostrarSugestoesClockify(tipo, [], 'empty');
+        return;
+      }
+      const resultados = filtrarProjetosClockify(texto);
+      if (resultados.length) {
+        mostrarSugestoesClockify(tipo, resultados, 'list');
+      } else {
+        mostrarSugestoesClockify(tipo, [], 'empty');
+      }
+    }, 400);
+
+    // Digitar: limpa seleção anterior e dispara busca com debounce
+    nomeField.addEventListener('input', () => {
+      codeField.value = '';
+      nomeField.dataset.clockifyId = '';
+      nomeField.classList.remove('error');
+      codeField.classList.remove('error');
+      mostrarSugestoesClockify(tipo, [], 'loading');
+      buscarComDebounce(nomeField.value);
+    });
+
+    // Clicar em sugestão: preenche os dois campos
+    suggestionsBox.addEventListener('mousedown', (e) => {
+      const item = e.target.closest('.clockify-suggestion-item');
+      if (!item) return;
+      e.preventDefault();
+      nomeField.value = item.dataset.nome;
+      codeField.value = item.dataset.code;
+      nomeField.dataset.clockifyId = item.dataset.id;
+      nomeField.classList.remove('error');
+      codeField.classList.remove('error');
+      esconderSugestoesClockify(tipo);
+    });
+
+    // Fechar ao perder foco
+    nomeField.addEventListener('blur', () => {
+      setTimeout(() => esconderSugestoesClockify(tipo), 200);
+    });
+
+    // Fechar com Escape
+    nomeField.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') esconderSugestoesClockify(tipo);
+    });
+  });
 }
 
 function configurarMascaras() {
@@ -2010,7 +2294,7 @@ function configurarMascaras() {
 
 // ========== UPPERCASE EM TEMPO REAL ==========
 function setupUppercaseInputs() {
-  const inputs = document.querySelectorAll('input[type="text"].form-control:not(.mask-cnpj):not(.mask-phone):not(.mask-cep):not(.mask-currency)');
+  const inputs = document.querySelectorAll('input[type="text"].form-control:not(.mask-cnpj):not(.mask-phone):not(.mask-cep):not(.mask-currency):not([list])');
   
   inputs.forEach(input => {
     input.addEventListener('input', function(e) {
@@ -2027,39 +2311,57 @@ function setupUppercaseInputs() {
   });
 }
 
-// ========== PREFIXO # PARA CLOCKFY ==========
-function setupClockfyPrefix() {
-  const clockfyFields = ['codigoClockfyCREA', 'codigoClockfyCRBio'];
-  
-  clockfyFields.forEach(id => {
-    const field = document.getElementById(id);
-    if (!field) return;
-    
-    field.placeholder = '#0001-1';
-    
-    field.addEventListener('focus', function() {
-      if (this.value && !this.value.startsWith('#')) {
-        this.value = '#' + this.value;
-      }
+// ========== INTEGRAÇÃO CLOCKIFY ==========
+async function carregarProjetosClockify() {
+  try {
+    const wsRes = await fetch(`${CLOCKIFY_BASE_URL}/workspaces`, {
+      headers: { 'X-Api-Key': CLOCKIFY_API_KEY }
     });
-    
-    field.addEventListener('keydown', function(e) {
-      if (this.value.startsWith('#') && 
-          (e.key === 'Backspace' || e.key === 'Delete') && 
-          this.selectionStart <= 1 && this.selectionEnd <= 1) {
-        e.preventDefault();
-      }
-    });
-    
-    field.addEventListener('input', function() {
-      if (!this.value.startsWith('#') && this.value.length > 0) {
-        const cursor = this.selectionStart;
-        this.value = '#' + this.value.replace(/^#+/, '');
-        const newCursor = Math.max(1, cursor);
-        this.setSelectionRange(newCursor, newCursor);
-      }
-    });
-  });
+    if (!wsRes.ok) throw new Error(`Erro workspace: ${wsRes.status}`);
+    const workspaces = await wsRes.json();
+    if (!workspaces.length) throw new Error('Nenhum workspace encontrado');
+    const wsId = workspaces[0].id;
+
+    // Pagina igual ao Setegcard para garantir que todos os projetos sejam carregados
+    const todos = [];
+    for (let page = 1; page < 100; page++) {
+      const res = await fetch(
+        `${CLOCKIFY_BASE_URL}/workspaces/${wsId}/projects?page=${page}&page-size=200&archived=false`,
+        { headers: { 'X-Api-Key': CLOCKIFY_API_KEY } }
+      );
+      if (!res.ok) throw new Error(`Erro projetos: ${res.status}`);
+      const lote = await res.json();
+      if (!lote.length) break;
+      todos.push(...lote);
+      if (lote.length < 200) break;
+    }
+
+    // Filtra cancelados/finalizados (mesma convenção do Setegcard)
+    const ignorar = /^(CANCELADO|FINALIZADO)/i;
+    projetosClockify = todos
+      .filter(p => !ignorar.test((p.name || '').trim()))
+      .map(p => {
+        // Tenta extrair código e nome do formato "#0006-5-2025 (CASA DOS VENTOS)"
+        const m = (p.name || '').match(/^(#[^\s(]+)\s*(?:\((.+)\))?$/);
+        const code  = m ? m[1] : p.name;
+        // Prioridade: nome entre parênteses → clientName → nome completo
+        const nome  = (m && m[2] ? m[2].trim() : null)
+                   || (p.clientName ? p.clientName.trim() : null)
+                   || p.name;
+        return { ...p, _code: code, _nome: nome };
+      });
+
+    popularSelectsEmpreendimento();
+    console.log(`✅ ${projetosClockify.length} projetos Clockify carregados`);
+    if (!projetosClockify.length) showToast('Clockify conectado, mas nenhum projeto ativo encontrado.', 'info');
+  } catch(e) {
+    console.error('Erro ao carregar projetos Clockify:', e);
+    showToast('Não foi possível carregar os projetos do Clockify. Verifique a conexão.', 'error');
+  }
+}
+
+function popularSelectsEmpreendimento() {
+  // Datalists removidos — autocomplete customizado cuida do display
 }
 
 // ========== TOAST ==========
@@ -2104,12 +2406,53 @@ window.verDetalhes = verDetalhes;
 window.consultarTabelaAtividades = consultarTabelaAtividades;
 window.toggleSenha = toggleSenha;
 window.encaminharAoFinanceiro = encaminharAoFinanceiro;
+
+// DEBUG Clockify — rode no console: debugClockify()
+window.debugClockify = async function() {
+  console.group('=== DEBUG CLOCKIFY ===');
+  console.log('API Key configurada:', CLOCKIFY_API_KEY ? '✅ Sim' : '❌ Não');
+  console.log('Projetos em memória:', projetosClockify.length);
+
+  if (projetosClockify.length > 0) {
+    console.log('Primeiros 5 projetos (estrutura completa):');
+    console.table(projetosClockify.slice(0, 5).map(p => ({
+      id: p.id,
+      name: p.name,
+      code: p.code ?? '(sem code)',
+      clientName: p.clientName ?? '(sem cliente)',
+      archived: p.archived
+    })));
+    console.log('Exemplo de projeto completo (raw):', projetosClockify[0]);
+  } else {
+    console.warn('⚠️ Array vazio — tentando buscar agora...');
+    try {
+      const wsRes = await fetch(`${CLOCKIFY_BASE_URL}/workspaces`, { headers: { 'X-Api-Key': CLOCKIFY_API_KEY } });
+      console.log('Status /workspaces:', wsRes.status, wsRes.statusText);
+      const ws = await wsRes.json();
+      console.log('Workspaces retornados:', ws);
+      if (ws.length) {
+        const projRes = await fetch(`${CLOCKIFY_BASE_URL}/workspaces/${ws[0].id}/projects?page=1&page-size=5`, { headers: { 'X-Api-Key': CLOCKIFY_API_KEY } });
+        console.log('Status /projects:', projRes.status, projRes.statusText);
+        const projs = await projRes.json();
+        console.log('Primeiros 5 projetos (raw):', projs);
+      }
+    } catch(e) {
+      console.error('Erro na requisição:', e);
+    }
+  }
+  console.groupEnd();
+};
+window.finalizarSolicitacao = finalizarSolicitacao;
+window.confirmarBaixaART = confirmarBaixaART;
+window.pagarSolicitacao = pagarSolicitacao;
+window.assinarArt = assinarArt;
 window.fecharConfirmModal = fecharConfirmModal;
 window.confirmarAcaoOk = confirmarAcaoOk;
 window.confirmarAcaoCancel = confirmarAcaoCancel;
 window.salvarAtribuicao = salvarAtribuicao;
 window.salvarStatus = salvarStatus;
 window.salvarAjuste = salvarAjuste;
+window.ajusteRealizado = ajusteRealizado;
 window.salvarBaixa = salvarBaixa;
 
 // ========== INICIALIZAÇÃO ==========
@@ -2118,6 +2461,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('=== 🚀 INICIANDO APLICAÇÃO ===');
   
   try {
+    // Aplicar tema salvo antes de qualquer renderização
+    applyTheme(localStorage.getItem('sgart_theme') || 'light');
+    document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+
     initCache();
     console.log('✅ Cache inicializado');
     
@@ -2133,9 +2480,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupUppercaseInputs();
     console.log('✅ Uppercase em tempo real configurado');
     
-    setupClockfyPrefix();
-    console.log('✅ Prefixo Clockfy configurado');
-    
+    await carregarProjetosClockify();
+    console.log('✅ Projetos Clockify carregados');
+
     await carregarDados();
     console.log('✅ Dados carregados:', AppState.solicitacoes.length, 'solicitações');
     
@@ -2144,9 +2491,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     atualizarKPIs();
     console.log('✅ KPIs atualizados');
-    
-    atualizarFiltroSetores();
-    console.log('✅ Filtros de setor atualizados');
     
     console.log('=== ✨ APLICAÇÃO PRONTA ===');
     
