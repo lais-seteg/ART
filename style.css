@@ -1122,8 +1122,7 @@ body::before {
   bottom: 0;
   left: 0;
   right: 0;
-  text-align: center;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   color: var(--text-muted);
   font-size: 0.7rem;
   border-top: 1px solid var(--border-color);
@@ -1132,7 +1131,14 @@ body::before {
   height: var(--footer-height);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+}
+
+.footer-user-greeting {
+  color: var(--orange);
+  font-weight: 600;
+  font-size: 0.7rem;
+  white-space: nowrap;
 }
 
 /* ========== FOCUS ========== */
