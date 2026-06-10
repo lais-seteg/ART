@@ -928,7 +928,7 @@ function adicionarAtividadeCREA() {
     <div class="atividade-header" role="button" tabindex="0">
       <span class="atividade-number">Atividade ${count + 1}</span>
       <span class="atividade-preview" id="preview-${idx}">Selecione...</span>
-      <button type="button" class="btn btn-ghost-sm">✕</button>
+      <button type="button" class="btn btn-ghost-sm atividade-btn-remove">✕</button>
     </div>
     <div class="atividade-body open" id="body-${idx}">
       <div class="atividade-cascade">
@@ -950,7 +950,13 @@ function adicionarAtividadeCREA() {
           </div>
         </div>
       </div>
-      <div class="atividade-summary" id="summary-${idx}">Preencha os campos</div>
+      <div class="atividade-form-actions">
+        <button type="button" class="btn btn-success btn-salvar-atividade" data-idx="${idx}">✔ Salvar Atividade</button>
+      </div>
+    </div>
+    <div class="atividade-saved-block hidden" id="saved-${idx}">
+      <div class="atividade-saved-info" id="saved-info-${idx}"></div>
+      <button type="button" class="btn btn-ghost-sm btn-editar-atividade" data-idx="${idx}">✏ Editar</button>
     </div>
   `;
   
@@ -959,14 +965,53 @@ function adicionarAtividadeCREA() {
 }
 
 function setupAtividadeEventListeners(card, idx) {
-  card.querySelector('.btn-ghost-sm')?.addEventListener('click', () => {
+  card.querySelector('.atividade-btn-remove')?.addEventListener('click', () => {
     card.remove();
     renumerarAtividades();
   });
-  
+
   card.querySelector('.cascade-nivel')?.addEventListener('change', () => atualizarResumoAtividade(idx));
   card.querySelector('.cascade-profissional')?.addEventListener('change', () => atualizarResumoAtividade(idx));
   card.querySelector('.cascade-descricao')?.addEventListener('input', () => atualizarResumoAtividade(idx));
+
+  card.querySelector('.btn-salvar-atividade')?.addEventListener('click', () => salvarBlocoAtividade(idx));
+  card.querySelector('.btn-editar-atividade')?.addEventListener('click', () => editarBlocoAtividade(idx));
+}
+
+function salvarBlocoAtividade(idx) {
+  const card = document.querySelector(`.atividade-card[data-index="${idx}"]`);
+  if (!card) return;
+  const v = cl => card.querySelector(cl)?.value?.trim() || '';
+  const nivel = v('.cascade-nivel');
+  const atividade = v('.cascade-profissional');
+  const descricao = v('.cascade-descricao');
+
+  if (!nivel || !atividade || !descricao) {
+    showToast('Preencha Nível, Atividade e Descrição antes de salvar.', 'error');
+    return;
+  }
+
+  const savedInfo = document.getElementById(`saved-info-${idx}`);
+  if (savedInfo) {
+    savedInfo.innerHTML = `
+      <div class="atividade-saved-tags">
+        <span class="atividade-tag">${escapeHtml(nivel)}</span>
+        <span class="atividade-tag">${escapeHtml(atividade)}</span>
+      </div>
+      <p class="atividade-saved-descricao">${escapeHtml(descricao)}</p>
+    `;
+  }
+
+  document.getElementById(`body-${idx}`)?.classList.add('hidden');
+  document.getElementById(`saved-${idx}`)?.classList.remove('hidden');
+
+  const preview = document.getElementById(`preview-${idx}`);
+  if (preview) preview.textContent = `${nivel} › ${atividade}`;
+}
+
+function editarBlocoAtividade(idx) {
+  document.getElementById(`body-${idx}`)?.classList.remove('hidden');
+  document.getElementById(`saved-${idx}`)?.classList.add('hidden');
 }
 
 function renumerarAtividades() {
