@@ -1122,7 +1122,7 @@ body::before {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
   color: var(--text-muted);
   font-size: 0.7rem;
   border-top: 1px solid var(--border-color);
@@ -1131,14 +1131,28 @@ body::before {
   height: var(--footer-height);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 }
 
-.footer-user-greeting {
-  color: var(--orange);
+.user-welcome-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, rgba(58, 101, 176, 0.18), rgba(255, 130, 0, 0.12));
+  border: 1px solid rgba(255, 130, 0, 0.3);
+  border-left: 4px solid var(--orange);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
   font-weight: 600;
-  font-size: 0.7rem;
-  white-space: nowrap;
+  color: var(--text-primary);
+}
+.user-welcome-banner .welcome-icon {
+  font-size: 1.2rem;
+}
+.user-welcome-banner .welcome-name {
+  color: var(--orange);
 }
 
 /* ========== FOCUS ========== */

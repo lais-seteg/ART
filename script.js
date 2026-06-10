@@ -767,7 +767,7 @@ function atualizarInterfaceUsuario() {
     restritos.forEach(el => el.classList.remove('hidden'));
   }
   
-  const footerGreeting = document.getElementById('footerUserGreeting');
+  const welcomeBanner = document.getElementById('userWelcomeBanner');
 
   if (AppState.usuarioAtual && ui && bg) {
     ui.classList.remove('hidden');
@@ -777,14 +777,14 @@ function atualizarInterfaceUsuario() {
       financeiro: '💳'
     }[AppState.usuarioAtual.tipo] || '👤';
     bg.textContent = `${ic} ${AppState.usuarioAtual.nome}`;
-    if (footerGreeting) {
+    if (welcomeBanner) {
       const primeiroNome = AppState.usuarioAtual.nome.split(' ')[0];
-      footerGreeting.textContent = `Bem-vindo(a), ${primeiroNome}`;
-      footerGreeting.classList.remove('hidden');
+      welcomeBanner.innerHTML = `<span class="welcome-icon">${ic}</span> Bem-vindo(a), <span class="welcome-name">${primeiroNome}</span>`;
+      welcomeBanner.classList.remove('hidden');
     }
   } else if (ui) {
     ui.classList.add('hidden');
-    if (footerGreeting) footerGreeting.classList.add('hidden');
+    if (welcomeBanner) welcomeBanner.classList.add('hidden');
   }
 }
 
