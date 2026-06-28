@@ -152,7 +152,7 @@ const ATIVIDADES_PROFISSIONAIS = [
 // ✅ NOVO: Status permitidos por perfil
 const STATUS_POR_PERFIL = {
   admin: ['Na fila', 'Processando', 'Rascunho Pendente', 'Ajuste Pendente', 'Pagamento Programado', 'Pago', 'ART Assinada', 'Finalizado', 'Baixa Solicitada', 'Baixa da ART'],
-  tecnico: ['Processando', 'Rascunho Pendente', 'Ajuste Pendente', 'Pagamento Programado', 'Baixa Solicitada', 'Baixa da ART', 'Finalizado'],
+  tecnico: ['Processando', 'Rascunho Pendente', 'Rascunho Reprovado', 'Ajuste Pendente', 'Pagamento Programado', 'Baixa Solicitada', 'Baixa da ART', 'Finalizado'],
   financeiro: ['Pago', 'ART Assinada', 'Finalizado']
 };
 
@@ -198,6 +198,7 @@ function getStatusClass(s) {
     'Na fila': 'status-na-fila',
     'Processando': 'status-processando',
     'Rascunho Pendente': 'status-rascunho',
+    'Rascunho Reprovado': 'status-reprovado',
     'Ajuste Pendente': 'status-ajuste',
     'Pagamento Programado': 'status-pagamento',
     'Pago': 'status-pago',
@@ -212,6 +213,16 @@ function getStatusClass(s) {
 // ✅ NOVO: Helper para exibição formatada do status
 function formatarStatusExibicao(s) {
   return s === 'Pagamento Programado' ? 'Encaminhado para o Financeiro' : s;
+}
+
+// Oculta "Rascunho Reprovado" de não-técnicos — exibe como "Processando"
+function statusParaExibir(status, perms) {
+  if (status === 'Rascunho Reprovado' && !perms.tipoTecnico) return 'Processando';
+  return formatarStatusExibicao(status);
+}
+function statusClassParaExibir(status, perms) {
+  if (status === 'Rascunho Reprovado' && !perms.tipoTecnico) return getStatusClass('Processando');
+  return getStatusClass(status);
 }
 
 // ✅ ATUALIZADO: Permissões com status permitidos e flag de atribuição
@@ -1287,7 +1298,7 @@ function renderizarTabela() {
 }
 
 function renderTableRow(s, perms) {
-  const sc = getStatusClass(s.status);
+  const sc = statusClassParaExibir(s.status, perms);
   const cc = s.tipo === 'CRBio' ? 'cr-bio' : '';
   const sf = str => escapeHtml(str || '—');
   
@@ -1302,10 +1313,10 @@ function renderTableRow(s, perms) {
     if (statusAtivos && perms.podeEncaminharFinanceiro) {
       a += `<button class="btn btn-ghost-sm btn-encaminhar" data-action="encaminhar-financeiro" data-id="${s.solicitacao_id}" title="Enviar para o Financeiro">${ICONS.encaminhar}</button>`;
     }
-    if (s.rascunho_art === 'sim' && s.status === 'Processando') {
+    if (s.rascunho_art === 'sim' && ['Processando', 'Rascunho Reprovado'].includes(s.status)) {
       a += `<button class="btn btn-ghost-sm" data-action="enviar-rascunho" data-id="${s.solicitacao_id}" title="Enviar Rascunho para Aprovação">${ICONS.enviarRascunho}</button>`;
     }
-    if (!['Finalizado', 'Baixa Solicitada', 'Baixa da ART', 'Rascunho Pendente'].includes(s.status)) {
+    if (!['Finalizado', 'Baixa Solicitada', 'Baixa da ART', 'Rascunho Pendente', 'Rascunho Reprovado'].includes(s.status)) {
       a += `<button class="btn btn-ghost-sm" data-action="finalizar" data-id="${s.solicitacao_id}" title="Finalizar">${ICONS.finalizar}</button>`;
     }
     if (s.status === 'Baixa Solicitada') {
@@ -1359,7 +1370,7 @@ function renderTableRow(s, perms) {
     <td>${sf(s.solicitante)}</td>
     <td>${sf(s.contratante)}</td>
     <td>${formatarDataBR(s.prazoEmissaoArt)}</td>
-    <td><span class="status-badge ${sc}">${sf(formatarStatusExibicao(s.status))}</span></td>
+    <td><span class="status-badge ${sc}">${sf(statusParaExibir(s.status, perms))}</span></td>
     <td>${sf(s.tecnico_responsavel || '—')}</td>
     <td><div class="table-actions">${a}</div></td>
   `;
@@ -1404,7 +1415,7 @@ function atualizarKPIs() {
   const counts = {
     Total: dados.length,
     Fila: dados.filter(s => s.status === 'Na fila').length,
-    Processando: dados.filter(s => s.status === 'Processando').length,
+    Processando: dados.filter(s => s.status === 'Processando' || s.status === 'Rascunho Reprovado').length,
     Rascunho: dados.filter(s => s.status === 'Rascunho Pendente').length,
     Ajuste: dados.filter(s => s.status === 'Ajuste Pendente').length,
     Pagamento: dados.filter(s => s.status === 'Pagamento Programado').length,
@@ -1478,7 +1489,7 @@ async function verDetalhes(id) {
       <div class="detail-item"><span class="detail-label">Solicitante</span><span class="detail-value">${sf(s.solicitante)}</span></div>
       <div class="detail-item"><span class="detail-label">Data da Solicitação</span><span class="detail-value">${formatarDataBR(s.dataSolicitacao)}</span></div>
       <div class="detail-item"><span class="detail-label">Prazo de Emissão da ART</span><span class="detail-value">${formatarDataBR(s.prazoEmissaoArt)}</span></div>
-      <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value"><span class="status-badge ${getStatusClass(s.status)}">${sf(formatarStatusExibicao(s.status))}</span></span></div>
+      <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value"><span class="status-badge ${statusClassParaExibir(s.status, getPermissoes())}">${sf(statusParaExibir(s.status, getPermissoes()))}</span></span></div>
     </div>
 
     <!-- ── Informações do Projeto ── -->
@@ -1619,10 +1630,10 @@ async function verDetalhes(id) {
     if (statusAtivos && perms.podeEncaminharFinanceiro) {
       ft += `<button class="btn btn-secondary" onclick="fecharModal(event);encaminharAoFinanceiro('${s.solicitacao_id}')">${ICONS.encaminhar} Enc. Financeiro</button>`;
     }
-    if (s.rascunho_art === 'sim' && s.status === 'Processando') {
+    if (s.rascunho_art === 'sim' && ['Processando', 'Rascunho Reprovado'].includes(s.status)) {
       ft += `<button class="btn btn-primary" onclick="fecharModal(event);enviarRascunho('${s.solicitacao_id}')">${ICONS.enviarRascunho} Enviar Rascunho</button>`;
     }
-    if (!['Finalizado','Baixa Solicitada','Baixa da ART','Rascunho Pendente'].includes(s.status)) {
+    if (!['Finalizado','Baixa Solicitada','Baixa da ART','Rascunho Pendente','Rascunho Reprovado'].includes(s.status)) {
       ft += `<button class="btn btn-success" onclick="fecharModal(event);finalizarSolicitacao('${s.solicitacao_id}')">${ICONS.finalizar} Finalizar</button>`;
       ft += `<button class="btn btn-warning" onclick="fecharModal(event);abrirAjusteModal('${s.solicitacao_id}')">${ICONS.ajuste} Solicitar Ajuste</button>`;
     }
@@ -2121,7 +2132,7 @@ async function salvarReprovacaoRascunho(id) {
     return;
   }
   try {
-    await atualizarSolicitacaoDB(id, { status: 'Processando', rascunho_justificativa: justificativa });
+    await atualizarSolicitacaoDB(id, { status: 'Rascunho Reprovado', rascunho_justificativa: justificativa });
     await adicionarHistoricoDB(id, 'Rascunho Reprovado', justificativa);
     showToast('Rascunho reprovado. Técnico foi notificado para revisão.', 'success');
     AppState.solicitacoes = await carregarSolicitacoesDB();

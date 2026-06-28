@@ -629,6 +629,8 @@ body::before {
 .status-art-assinada { background: rgba(0,150,136,0.12); color: #00897B; border-color: rgba(0,150,136,0.35); }
 /* Rascunho Pendente → Amarelo mostarda */
 .status-rascunho { background: rgba(212,160,23,0.12); color: #D4A017; border-color: rgba(212,160,23,0.4); }
+/* Rascunho Reprovado → Vermelho (visível só para técnico) */
+.status-reprovado { background: rgba(231,76,60,0.12); color: #E74C3C; border-color: rgba(231,76,60,0.4); }
 
 .conselho-badge {
   display: inline-block;
