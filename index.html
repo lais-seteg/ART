@@ -465,6 +465,7 @@
             <button class="filter-pill active" data-status="todas">Todas</button>
             <button class="filter-pill" data-status="Na fila">Na Fila</button>
             <button class="filter-pill" data-status="Processando">Em Andamento</button>
+            <button class="filter-pill" data-status="Rascunho Pendente">Rascunho Pendente</button>
             <button class="filter-pill" data-status="Ajuste Pendente">Ajuste Pendente</button>
             <button class="filter-pill" data-status="Pagamento Programado">Enc. Financeiro</button>
             <button class="filter-pill" data-status="Pago">Pago</button>
@@ -539,13 +540,6 @@
       <!-- KPIs LATERAL DIREITA -->
       <aside class="kpi-sidebar">
         <div class="kpi-grid">
-          <div class="kpi-card kpi-total">
-            <div class="kpi-card-body">
-              <span class="kpi-label">Total de Solicitações</span>
-              <span class="kpi-desc">Todas as ARTs cadastradas</span>
-            </div>
-            <span class="kpi-value" id="kpiTotal">0</span>
-          </div>
           <div class="kpi-card kpi-fila">
             <div class="kpi-card-body">
               <span class="kpi-label">Na Fila</span>
@@ -615,6 +609,13 @@
               <span class="kpi-desc">ART encerrada oficialmente</span>
             </div>
             <span class="kpi-value" id="kpiBaixa">0</span>
+          </div>
+          <div class="kpi-card kpi-total">
+            <div class="kpi-card-body">
+              <span class="kpi-label">Total de Solicitações</span>
+              <span class="kpi-desc">Todas as ARTs cadastradas</span>
+            </div>
+            <span class="kpi-value" id="kpiTotal">0</span>
           </div>
         </div>
         
