@@ -130,8 +130,8 @@ const ICONS = {
   confirmarBaixa: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>`,
   pagar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
   assinar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/><polyline points="17 8 20 11"/></svg>`,
-  enviarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>`,
-  aprovarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`
+  enviarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+  aprovarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
 };
 
 const ATIVIDADES_PROFISSIONAIS = [
@@ -1465,12 +1465,13 @@ async function verDetalhes(id) {
   if (mt) mt.textContent = `Detalhes – ${s.solicitacao_id} (${s.tipo})`;
   const sf = str => escapeHtml(str || '—');
 
-  // ── Cabeçalho ──────────────────────────────────────────────
+  // ── Identificação ──────────────────────────────────────────
   let h = `
+    <div class="detail-section-title">📌 Identificação da Solicitação</div>
     <div class="detail-grid">
       <div class="detail-item"><span class="detail-label">Solicitante</span><span class="detail-value">${sf(s.solicitante)}</span></div>
-      <div class="detail-item"><span class="detail-label">Data Solicitação</span><span class="detail-value">${formatarDataBR(s.dataSolicitacao)}</span></div>
-      <div class="detail-item"><span class="detail-label">Prazo da Emissão da ART</span><span class="detail-value">${formatarDataBR(s.prazoEmissaoArt)}</span></div>
+      <div class="detail-item"><span class="detail-label">Data da Solicitação</span><span class="detail-value">${formatarDataBR(s.dataSolicitacao)}</span></div>
+      <div class="detail-item"><span class="detail-label">Prazo de Emissão da ART</span><span class="detail-value">${formatarDataBR(s.prazoEmissaoArt)}</span></div>
       <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value"><span class="status-badge ${getStatusClass(s.status)}">${sf(formatarStatusExibicao(s.status))}</span></span></div>
     </div>
 
@@ -1479,15 +1480,15 @@ async function verDetalhes(id) {
     <div class="detail-grid">
       <div class="detail-item full-width"><span class="detail-label">Nome do Empreendimento</span><span class="detail-value">${sf(s.nomeEmpreendimento)}</span></div>
       <div class="detail-item"><span class="detail-label">Código Clockify</span><span class="detail-value">${sf(s.codigoClockfy)}</span></div>
-      <div class="detail-item"><span class="detail-label">Rascunho da ART para validação?</span><span class="detail-value">${s.rascunho_art === 'sim' ? 'Sim' : s.rascunho_art === 'nao' ? 'Não' : '—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Rascunho da ART para validação?</span><span class="detail-value">${s.rascunho_art === 'sim' ? '✔ Sim' : s.rascunho_art === 'nao' ? 'Não' : '—'}</span></div>
     </div>
 
-    <!-- ── Informações do Técnico ── -->
-    <div class="detail-section-title">🔧 Informações do Técnico</div>
+    <!-- ── Técnico ── -->
+    <div class="detail-section-title">🔧 Técnico Responsável</div>
     <div class="detail-grid">
-      <div class="detail-item"><span class="detail-label">Nome do Técnico Responsável</span><span class="detail-value">${sf(s.nomeTecnico)}</span></div>
+      <div class="detail-item"><span class="detail-label">Nome do Técnico</span><span class="detail-value">${sf(s.nomeTecnico)}</span></div>
       <div class="detail-item"><span class="detail-label">Estado (UF)</span><span class="detail-value">${sf(s.estado)}</span></div>
-      ${s.tecnico_responsavel ? `<div class="detail-item"><span class="detail-label">Técnico Responsável</span><span class="detail-value">${sf(s.tecnico_responsavel)}</span></div>` : ''}
+      ${s.tecnico_responsavel ? `<div class="detail-item"><span class="detail-label">Atribuído</span><span class="detail-value">${sf(s.tecnico_responsavel)}</span></div>` : ''}
     </div>`;
 
   // ── Vínculo ACMB (CRBio) ───────────────────────────────────
@@ -1499,33 +1500,43 @@ async function verDetalhes(id) {
     </div>`;
   }
 
-  // ── Informações para Emissão da ART ───────────────────────
+  // ── Dados do Contratante ───────────────────────────────────
   h += `
-    <div class="detail-section-title">📋 Informações para Emissão da ART</div>
+    <div class="detail-section-title">🏢 Dados do Contratante</div>
     <div class="detail-grid">
       <div class="detail-item full-width"><span class="detail-label">Nome do Contratante</span><span class="detail-value">${sf(s.contratante)}</span></div>
       <div class="detail-item"><span class="detail-label">CNPJ</span><span class="detail-value">${sf(s.cnpj)}</span></div>
       <div class="detail-item"><span class="detail-label">E-mail</span><span class="detail-value">${sf(s.email)}</span></div>
       <div class="detail-item"><span class="detail-label">Contato</span><span class="detail-value">${sf(s.contato)}</span></div>
-      <div class="detail-item full-width"><span class="detail-label">Endereço do Contratante</span><span class="detail-value">${sf(s.endereco)}, ${sf(s.bairro)} – CEP ${sf(s.cep)}</span></div>
-      <div class="detail-item full-width"><span class="detail-label">Endereço da Obra</span><span class="detail-value">${sf(s.enderecoObra)}</span></div>
-      <div class="detail-item"><span class="detail-label">Bairro da Obra</span><span class="detail-value">${sf(s.bairroObra)}</span></div>
-      <div class="detail-item"><span class="detail-label">CEP da Obra</span><span class="detail-value">${sf(s.cepObra)}</span></div>
-      ${s.latitude ? `<div class="detail-item"><span class="detail-label">Latitude</span><span class="detail-value">${sf(s.latitude)}</span></div>` : ''}
-      ${s.longitude ? `<div class="detail-item"><span class="detail-label">Longitude</span><span class="detail-value">${sf(s.longitude)}</span></div>` : ''}`;
+    </div>
 
-  // Campos exclusivos CRBio dentro da mesma seção
+    <!-- ── Endereços ── -->
+    <div class="detail-section-title">📍 Endereços</div>
+    <div class="detail-grid">
+      <div class="detail-item full-width"><span class="detail-label">Endereço do Contratante</span><span class="detail-value">${sf(s.endereco)}, ${sf(s.bairro)} – CEP ${sf(s.cep)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Endereço da Obra</span><span class="detail-value">${sf(s.enderecoObra)}, ${sf(s.bairroObra)} – CEP ${sf(s.cepObra)}</span></div>
+      ${s.latitude ? `<div class="detail-item"><span class="detail-label">Latitude</span><span class="detail-value">${sf(s.latitude)}</span></div>` : ''}
+      ${s.longitude ? `<div class="detail-item"><span class="detail-label">Longitude</span><span class="detail-value">${sf(s.longitude)}</span></div>` : ''}
+    </div>`;
+
+  // ── Dados Ambientais (CRBio) ───────────────────────────────
   if (s.tipo === 'CRBio') {
     h += `
+    <div class="detail-section-title">🌿 Dados Ambientais</div>
+    <div class="detail-grid">
       <div class="detail-item"><span class="detail-label">Localidade</span><span class="detail-value">${sf(s.localidade)}</span></div>
-      <div class="detail-item full-width"><span class="detail-label">Descrição Sumária</span><span class="detail-value">${sf(s.descricaoSumaria)}</span></div>
       <div class="detail-item"><span class="detail-label">Formato de Execução</span><span class="detail-value">${sf(s.formatoExecucao)}</span></div>
-      <div class="detail-item"><span class="detail-label">Meio Ambiente e Biodiversidade</span><span class="detail-value">${sf(s.meioAmbiente)}</span></div>`;
+      <div class="detail-item"><span class="detail-label">Meio Ambiente e Biodiversidade</span><span class="detail-value">${sf(s.meioAmbiente)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Descrição Sumária</span><span class="detail-value">${sf(s.descricaoSumaria)}</span></div>
+    </div>`;
   }
 
+  // ── Dados do Projeto ──────────────────────────────────────
   h += `
-      <div class="detail-item"><span class="detail-label">Data de Início do Projeto</span><span class="detail-value">${formatarDataBR(s.dataInicio)}</span></div>
-      <div class="detail-item"><span class="detail-label">Data do Fim do Projeto</span><span class="detail-value">${formatarDataBR(s.dataFim)}</span></div>
+    <div class="detail-section-title">📅 Dados do Projeto</div>
+    <div class="detail-grid">
+      <div class="detail-item"><span class="detail-label">Data de Início</span><span class="detail-value">${formatarDataBR(s.dataInicio)}</span></div>
+      <div class="detail-item"><span class="detail-label">Data de Fim</span><span class="detail-value">${formatarDataBR(s.dataFim)}</span></div>
       <div class="detail-item"><span class="detail-label">Horas do Projeto</span><span class="detail-value">${sf(s.qtdHoras)}</span></div>
       <div class="detail-item"><span class="detail-label">Valor do Projeto</span><span class="detail-value">${formatarMoedaBR(s.valor)}</span></div>
       <div class="detail-item full-width"><span class="detail-label">Equipe do Projeto</span><span class="detail-value">${sf(s.equipe)}</span></div>
@@ -1536,10 +1547,11 @@ async function verDetalhes(id) {
     h += `<div class="detail-section-title">🛠️ Atividades CREA</div>`;
     s.atividades.forEach((att, i) => {
       h += `
-      <div style="background:var(--bg-secondary);padding:0.8rem;border-radius:var(--radius-sm);margin-bottom:0.5rem;">
-        <div style="font-weight:600;color:var(--orange);margin-bottom:0.3rem;">Atividade ${i + 1}</div>
-        <div style="font-size:0.85rem;color:var(--text-secondary);">${sf(att.nivel)} › ${sf(att.atividadeProfissional)}</div>
-        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">${sf(att.descricaoServico)}</div>
+      <div class="atividade-detail-card">
+        <div class="atividade-detail-num">Atividade ${i + 1}</div>
+        <div class="atividade-detail-row"><span class="detail-label">Nível</span><span class="detail-value">${sf(att.nivel)}</span></div>
+        <div class="atividade-detail-row"><span class="detail-label">Atividade Profissional</span><span class="detail-value">${sf(att.atividadeProfissional)}</span></div>
+        <div class="atividade-detail-row"><span class="detail-label">Descrição do Serviço</span><span class="detail-value">${sf(att.descricaoServico)}</span></div>
       </div>`;
     });
   }
@@ -1548,16 +1560,17 @@ async function verDetalhes(id) {
   h += `
     <div class="detail-section-title">📁 Arquivos Finais</div>
     <div class="detail-grid">
-      <div class="detail-item full-width"><span class="detail-label">Local do Boleto / ART / Documentos</span><span class="detail-value">${s.diretorioArquivo ? `<a href="${escapeHtml(s.diretorioArquivo)}" target="_blank" rel="noopener" style="color:#5aafe0;text-decoration:underline;">${escapeHtml(s.diretorioArquivo)}</a>` : '—'}</span></div>
-      <div class="detail-item full-width"><span class="detail-label">Observações sobre Documentos</span><span class="detail-value">${sf(s.obsDocumentos)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Local do Boleto / ART / Documentos</span><span class="detail-value">${s.diretorioArquivo ? `<a href="${escapeHtml(s.diretorioArquivo)}" target="_blank" rel="noopener" class="detail-link">${escapeHtml(s.diretorioArquivo)}</a>` : '—'}</span></div>
+      ${s.obsDocumentos ? `<div class="detail-item full-width"><span class="detail-label">Observações sobre Documentos</span><span class="detail-value">${sf(s.obsDocumentos)}</span></div>` : ''}
     </div>`;
 
   if (s.observacoes) {
     h += `
     <div class="detail-section-title">💬 Observações Gerais</div>
-    <div class="detail-item full-width"><span class="detail-value" style="white-space:pre-wrap;">${sf(s.observacoes)}</span></div>`;
+    <div class="detail-grid">
+      <div class="detail-item full-width"><span class="detail-value" style="white-space:pre-wrap;">${sf(s.observacoes)}</span></div>
+    </div>`;
   }
-  h += ``;
   
   const hist = await carregarHistoricoDB(id);
   h += `<div class="history-timeline"><div class="history-title">📜 Histórico</div>`;

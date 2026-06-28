@@ -834,6 +834,7 @@ body::before {
 
 .legend-dot.status-na-fila          { background: #8A9AB5; }
 .legend-dot.status-processando      { background: #FF8200; }
+.legend-dot.status-rascunho         { background: #D4A017; }
 .legend-dot.status-ajuste           { background: #C8960A; }
 .legend-dot.status-pagamento        { background: #2E86C1; }
 .legend-dot.status-pago             { background: #27AE60; }
@@ -1088,6 +1089,14 @@ body::before {
 .detail-label { font-size: 0.62rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.03em; font-weight: 600; }
 .detail-value { font-size: 0.85rem; color: var(--text-primary); word-break: break-word; }
 .detail-section-title { font-size: 0.88rem; font-weight: 600; color: var(--orange); margin: 1rem 0 0.4rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border-color); }
+
+.detail-link { color: #5aafe0; text-decoration: underline; word-break: break-all; }
+.detail-link:hover { color: #82c8f0; }
+
+.atividade-detail-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-left: 3px solid var(--orange); border-radius: var(--radius-sm); padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; }
+.atividade-detail-num { font-size: 0.72rem; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.4rem; }
+.atividade-detail-row { display: flex; flex-direction: column; gap: 0.05rem; margin-bottom: 0.3rem; }
+.atividade-detail-row:last-child { margin-bottom: 0; }
 
 .history-timeline { margin-top: 1.2rem; padding: 0.8rem; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); }
 .history-title { font-size: 0.85rem; font-weight: 600; color: var(--orange); margin-bottom: 0.7rem; }
