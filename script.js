@@ -657,7 +657,7 @@ function initCache() {
   DOM.btnLast = document.getElementById('btnLast');
   DOM.perPageSelect = document.getElementById('perPage');
   
-  ['Total', 'Fila', 'Processando', 'Ajuste', 'Pagamento', 'Pago', 'Finalizado', 'Baixa'].forEach(k => {
+  ['Total', 'Fila', 'Processando', 'Rascunho', 'Ajuste', 'Pagamento', 'Pago', 'ArtAssinada', 'Finalizado', 'Baixa'].forEach(k => {
     DOM.kpis[k] = document.getElementById(`kpi${k}`);
   });
   
@@ -1402,9 +1402,11 @@ function atualizarKPIs() {
     Total: dados.length,
     Fila: dados.filter(s => s.status === 'Na fila').length,
     Processando: dados.filter(s => s.status === 'Processando').length,
+    Rascunho: dados.filter(s => s.status === 'Rascunho Pendente').length,
     Ajuste: dados.filter(s => s.status === 'Ajuste Pendente').length,
     Pagamento: dados.filter(s => s.status === 'Pagamento Programado').length,
-    Pago: dados.filter(s => s.status === 'Pago' || s.status === 'ART Assinada').length,
+    Pago: dados.filter(s => s.status === 'Pago').length,
+    ArtAssinada: dados.filter(s => s.status === 'ART Assinada').length,
     Finalizado: dados.filter(s => s.status === 'Finalizado').length,
     Baixa: dados.filter(s => s.status === 'Baixa da ART' || s.status === 'Baixa Solicitada').length
   };

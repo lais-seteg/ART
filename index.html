@@ -540,35 +540,73 @@
       <aside class="kpi-sidebar">
         <div class="kpi-grid">
           <div class="kpi-card kpi-total">
-            <span class="kpi-label">Total de Solicitações</span>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Total de Solicitações</span>
+              <span class="kpi-desc">Todas as ARTs cadastradas</span>
+            </div>
             <span class="kpi-value" id="kpiTotal">0</span>
           </div>
           <div class="kpi-card kpi-fila">
-            <span class="kpi-label">Na Fila</span>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Na Fila</span>
+              <span class="kpi-desc">Aguardando atribuição de técnico</span>
+            </div>
             <span class="kpi-value" id="kpiFila">0</span>
           </div>
           <div class="kpi-card kpi-processando">
-            <span class="kpi-label">Processando</span>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Em Andamento</span>
+              <span class="kpi-desc">Em elaboração pelo técnico</span>
+            </div>
             <span class="kpi-value" id="kpiProcessando">0</span>
           </div>
+          <div class="kpi-card kpi-rascunho">
+            <div class="kpi-card-body">
+              <span class="kpi-label">Rascunho Pendente</span>
+              <span class="kpi-desc">Aguardando aprovação do rascunho</span>
+            </div>
+            <span class="kpi-value" id="kpiRascunho">0</span>
+          </div>
           <div class="kpi-card kpi-ajuste">
-            <span class="kpi-label">Ajuste Pendente</span>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Ajuste Pendente</span>
+              <span class="kpi-desc">Correção solicitada pelo cliente</span>
+            </div>
             <span class="kpi-value" id="kpiAjuste">0</span>
           </div>
           <div class="kpi-card kpi-pagamento">
-            <span class="kpi-label">Enc. Financeiro</span>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Enc. Financeiro</span>
+              <span class="kpi-desc">Boleto enviado para pagamento</span>
+            </div>
             <span class="kpi-value" id="kpiPagamento">0</span>
           </div>
           <div class="kpi-card kpi-pago">
-            <span class="kpi-label">Pago</span>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Pago</span>
+              <span class="kpi-desc">Pagamento CREA confirmado</span>
+            </div>
             <span class="kpi-value" id="kpiPago">0</span>
           </div>
+          <div class="kpi-card kpi-art-assinada">
+            <div class="kpi-card-body">
+              <span class="kpi-label">ART Assinada</span>
+              <span class="kpi-desc">CRBio assinado pelo responsável</span>
+            </div>
+            <span class="kpi-value" id="kpiArtAssinada">0</span>
+          </div>
           <div class="kpi-card kpi-finalizado">
-            <span class="kpi-label">Finalizado</span>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Finalizado</span>
+              <span class="kpi-desc">ART emitida e pronta para entrega</span>
+            </div>
             <span class="kpi-value" id="kpiFinalizado">0</span>
           </div>
           <div class="kpi-card kpi-baixa">
-            <span class="kpi-label">Baixa da ART</span>
+            <div class="kpi-card-body">
+              <span class="kpi-label">Baixa da ART</span>
+              <span class="kpi-desc">ART encerrada oficialmente</span>
+            </div>
             <span class="kpi-value" id="kpiBaixa">0</span>
           </div>
         </div>
@@ -583,21 +621,6 @@
           <div id="listaPagamentosPendentes" class="notifications-panel-list"></div>
         </div>
 
-        <div class="status-legend">
-          <h4>Legenda de Status</h4>
-          <div class="legend-items-wrapper">
-            <div class="legend-item"><span class="legend-dot status-na-fila"></span><span class="legend-text"><span class="legend-label">Na Fila</span><span class="legend-desc">Aguardando atribuição de técnico</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-processando"></span><span class="legend-text"><span class="legend-label">Em Andamento</span><span class="legend-desc">Em elaboração pelo técnico</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-rascunho"></span><span class="legend-text"><span class="legend-label">Rascunho Pendente</span><span class="legend-desc">Aguardando aprovação do rascunho</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-ajuste"></span><span class="legend-text"><span class="legend-label">Ajuste Pendente</span><span class="legend-desc">Correção solicitada pelo cliente</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-pagamento"></span><span class="legend-text"><span class="legend-label">Enc. Financeiro</span><span class="legend-desc">Boleto enviado para pagamento</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-pago"></span><span class="legend-text"><span class="legend-label">Pago</span><span class="legend-desc">Pagamento CREA confirmado</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-art-assinada"></span><span class="legend-text"><span class="legend-label">ART Assinada</span><span class="legend-desc">CRBio assinado pelo responsável</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-finalizado"></span><span class="legend-text"><span class="legend-label">Finalizado</span><span class="legend-desc">ART emitida e pronta para entrega</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-baixa-solicitada"></span><span class="legend-text"><span class="legend-label">Baixa Solicitada</span><span class="legend-desc">Pedido de baixa em análise</span></span></div>
-            <div class="legend-item"><span class="legend-dot status-baixa-art"></span><span class="legend-text"><span class="legend-label">Baixa da ART</span><span class="legend-desc">ART encerrada oficialmente</span></span></div>
-          </div>
-        </div>
 
       </aside>
 
