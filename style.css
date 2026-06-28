@@ -149,6 +149,43 @@
 /* ── Header ── */
 [data-theme="light"] .app-header { box-shadow: 0 2px 12px rgba(0,0,0,0.10); }
 
+/* ── Status badges: cores escuras para legibilidade no fundo claro ── */
+[data-theme="light"] .status-na-fila          { color: #2E4A6B; border-color: rgba(46,74,107,0.45); }
+[data-theme="light"] .status-processando      { color: #A84400; border-color: rgba(168,68,0,0.45); }
+[data-theme="light"] .status-ajuste           { color: #6B4A00; border-color: rgba(107,74,0,0.45); }
+[data-theme="light"] .status-pagamento        { color: #1A5C8A; border-color: rgba(26,92,138,0.45); }
+[data-theme="light"] .status-pago             { color: #156A35; border-color: rgba(21,106,53,0.45); }
+[data-theme="light"] .status-finalizado       { color: #0D5025; border-color: rgba(13,80,37,0.45); }
+[data-theme="light"] .status-baixa-solicitada { color: #5C2082; border-color: rgba(92,32,130,0.45); }
+[data-theme="light"] .status-baixa-art        { color: #4A155E; border-color: rgba(74,21,94,0.45); }
+[data-theme="light"] .status-art-assinada     { color: #005B52; border-color: rgba(0,91,82,0.45); }
+[data-theme="light"] .status-rascunho         { color: #7A5200; border-color: rgba(122,82,0,0.45); }
+[data-theme="light"] .status-reprovado        { color: #A01A0A; border-color: rgba(160,26,10,0.45); }
+
+/* ── KPI values: mesmas cores escuras para o tema claro ── */
+[data-theme="light"] .kpi-fila .kpi-value            { color: #2E4A6B; }
+[data-theme="light"] .kpi-processando .kpi-value      { color: #A84400; }
+[data-theme="light"] .kpi-rascunho .kpi-value         { color: #7A5200; }
+[data-theme="light"] .kpi-ajuste .kpi-value           { color: #6B4A00; }
+[data-theme="light"] .kpi-pagamento .kpi-value        { color: #1A5C8A; }
+[data-theme="light"] .kpi-pago .kpi-value             { color: #156A35; }
+[data-theme="light"] .kpi-art-assinada .kpi-value     { color: #005B52; }
+[data-theme="light"] .kpi-finalizado .kpi-value       { color: #0D5025; }
+[data-theme="light"] .kpi-baixa-solicitada .kpi-value { color: #5C2082; }
+[data-theme="light"] .kpi-baixa .kpi-value            { color: #4A155E; }
+
+/* ── Links, títulos e hints no tema claro ── */
+[data-theme="light"] .detail-link              { color: #1A5F9A; }
+[data-theme="light"] .detail-link:hover        { color: #0D3E6F; }
+[data-theme="light"] .detail-section-title     { color: #A84400; }
+[data-theme="light"] .label-hint               { color: #006699; }
+[data-theme="light"] .sharepoint-info-label    { color: #4E6080 !important; }
+
+/* ── Botões de ação: texto visível no estado normal no tema claro ── */
+[data-theme="light"] .table-actions .btn[data-action="enviar-rascunho"]  { color: #7A5200; border-color: rgba(122,82,0,0.45); }
+[data-theme="light"] .table-actions .btn[data-action="aprovar-rascunho"] { color: #156A35; border-color: rgba(21,106,53,0.45); }
+[data-theme="light"] .table-actions .btn[data-action="reprovar-rascunho"]{ color: #A01A0A; border-color: rgba(160,26,10,0.45); }
+
 /* ========== BOTÃO TOGGLE DE TEMA ========== */
 .theme-toggle {
   position: relative;
