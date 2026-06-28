@@ -657,7 +657,7 @@ function initCache() {
   DOM.btnLast = document.getElementById('btnLast');
   DOM.perPageSelect = document.getElementById('perPage');
   
-  ['Total', 'Fila', 'Processando', 'Rascunho', 'Ajuste', 'Pagamento', 'Pago', 'ArtAssinada', 'Finalizado', 'Baixa'].forEach(k => {
+  ['Total', 'Fila', 'Processando', 'Rascunho', 'Ajuste', 'Pagamento', 'Pago', 'ArtAssinada', 'Finalizado', 'BaixaSolicitada', 'Baixa'].forEach(k => {
     DOM.kpis[k] = document.getElementById(`kpi${k}`);
   });
   
@@ -1408,7 +1408,8 @@ function atualizarKPIs() {
     Pago: dados.filter(s => s.status === 'Pago').length,
     ArtAssinada: dados.filter(s => s.status === 'ART Assinada').length,
     Finalizado: dados.filter(s => s.status === 'Finalizado').length,
-    Baixa: dados.filter(s => s.status === 'Baixa da ART' || s.status === 'Baixa Solicitada').length
+    BaixaSolicitada: dados.filter(s => s.status === 'Baixa Solicitada').length,
+    Baixa: dados.filter(s => s.status === 'Baixa da ART').length
   };
 
   Object.entries(counts).forEach(([k, v]) => {

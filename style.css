@@ -804,17 +804,19 @@ body::before {
 .kpi-pago        { border-left: 3px solid #27AE60; }
 .kpi-art-assinada { border-left: 3px solid #00897B; }
 .kpi-finalizado  { border-left: 3px solid #1E8449; }
-.kpi-baixa       { border-left: 3px solid #A569BD; }
+.kpi-baixa-solicitada { border-left: 3px solid #A569BD; }
+.kpi-baixa       { border-left: 3px solid #6C3483; }
 
-.kpi-fila .kpi-value        { color: #8A9AB5; }
-.kpi-processando .kpi-value  { color: #FF8200; }
-.kpi-rascunho .kpi-value     { color: #D4A017; }
-.kpi-ajuste .kpi-value       { color: #C8960A; }
-.kpi-pagamento .kpi-value    { color: #2E86C1; }
-.kpi-pago .kpi-value         { color: #27AE60; }
-.kpi-art-assinada .kpi-value { color: #00897B; }
-.kpi-finalizado .kpi-value   { color: #1E8449; }
-.kpi-baixa .kpi-value        { color: #A569BD; }
+.kpi-fila .kpi-value             { color: #8A9AB5; }
+.kpi-processando .kpi-value       { color: #FF8200; }
+.kpi-rascunho .kpi-value          { color: #D4A017; }
+.kpi-ajuste .kpi-value            { color: #C8960A; }
+.kpi-pagamento .kpi-value         { color: #2E86C1; }
+.kpi-pago .kpi-value              { color: #27AE60; }
+.kpi-art-assinada .kpi-value      { color: #00897B; }
+.kpi-finalizado .kpi-value        { color: #1E8449; }
+.kpi-baixa-solicitada .kpi-value  { color: #A569BD; }
+.kpi-baixa .kpi-value             { color: #C39BD3; }
 
 /* ========== LEGENDA DE STATUS (coluna lateral direita) ========== */
 .status-legend {
