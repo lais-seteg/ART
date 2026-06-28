@@ -290,6 +290,8 @@ body::before {
 .btn-voltar:hover { background: #e74c3c; color: #fff; box-shadow: 0 0 12px rgba(231,76,60,0.6); }
 .btn-success { background: rgba(39,174,96,0.15); color: #27AE60; border: 1px solid rgba(39,174,96,0.4); }
 .btn-success:hover { background: #27AE60; color: #fff; box-shadow: 0 0 10px rgba(39,174,96,0.5); transform: translateY(-1px); }
+.btn-danger { background: rgba(231,76,60,0.15); color: #E74C3C; border: 1px solid rgba(231,76,60,0.4); }
+.btn-danger:hover { background: #E74C3C; color: #fff; box-shadow: 0 0 10px rgba(231,76,60,0.5); transform: translateY(-1px); }
 .btn-secondary { background: rgba(46,134,193,0.15); color: #2E86C1; border: 1px solid rgba(46,134,193,0.4); }
 .btn-secondary:hover { background: #2E86C1; color: #fff; box-shadow: 0 0 10px rgba(46,134,193,0.5); transform: translateY(-1px); }
 .btn-warning { background: rgba(230,126,34,0.15); color: #E67E22; border: 1px solid rgba(230,126,34,0.4); }
@@ -678,6 +680,9 @@ body::before {
 
 .table-actions .btn[data-action="aprovar-rascunho"] { background: rgba(39,174,96,0.15); color: #27AE60; border-color: rgba(39,174,96,0.4); }
 .table-actions .btn[data-action="aprovar-rascunho"]:hover { background: #27AE60; color: #fff; box-shadow: 0 0 10px rgba(39,174,96,0.5); transform: translateY(-2px); }
+
+.table-actions .btn[data-action="reprovar-rascunho"] { background: rgba(231,76,60,0.15); color: #E74C3C; border-color: rgba(231,76,60,0.4); }
+.table-actions .btn[data-action="reprovar-rascunho"]:hover { background: #E74C3C; color: #fff; box-shadow: 0 0 10px rgba(231,76,60,0.5); transform: translateY(-2px); }
 
 /* ========== PAGINAÇÃO ========== */
 .pagination-container {
@@ -1462,6 +1467,12 @@ body::before {
 }
 .table-actions .btn[data-action="aprovar-rascunho"]:hover {
   background: #27AE60; color: #fff; box-shadow: 0 0 8px rgba(39,174,96,0.5); transform: translateY(-2px);
+}
+.table-actions .btn[data-action="reprovar-rascunho"] {
+  background: rgba(231,76,60,0.15); color: #E74C3C; border-color: rgba(231,76,60,0.4);
+}
+.table-actions .btn[data-action="reprovar-rascunho"]:hover {
+  background: #E74C3C; color: #fff; box-shadow: 0 0 8px rgba(231,76,60,0.5); transform: translateY(-2px);
 }
 .btn-label {
   font-size: 0.68rem;

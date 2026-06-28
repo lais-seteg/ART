@@ -131,7 +131,8 @@ const ICONS = {
   pagar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
   assinar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/><polyline points="17 8 20 11"/></svg>`,
   enviarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
-  aprovarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+  aprovarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  reprovarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
 };
 
 const ATIVIDADES_PROFISSIONAIS = [
@@ -644,6 +645,7 @@ function initCache() {
   DOM.editModalOverlay = document.getElementById('editModalOverlay');
   DOM.ajusteModalOverlay = document.getElementById('ajusteModalOverlay');
   DOM.baixaModalOverlay = document.getElementById('baixaModalOverlay');
+  DOM.reprovarRascunhoModalOverlay = document.getElementById('reprovarRascunhoModalOverlay');
   
   DOM.filterConselho = document.getElementById('filterConselho');
   DOM.filterSetor = document.getElementById('filterSetor');
@@ -1313,6 +1315,7 @@ function renderTableRow(s, perms) {
 
   if ((perms.tipoSolicitante || perms.tipoAdmin) && s.status === 'Rascunho Pendente') {
     a += `<button class="btn btn-ghost-sm" data-action="aprovar-rascunho" data-id="${s.solicitacao_id}" title="Aprovar Rascunho da ART">${ICONS.aprovarRascunho}</button>`;
+    a += `<button class="btn btn-ghost-sm" data-action="reprovar-rascunho" data-id="${s.solicitacao_id}" title="Reprovar Rascunho da ART">${ICONS.reprovarRascunho}</button>`;
   }
 
   if (perms.tipoFinanceiro) {
@@ -1635,6 +1638,7 @@ async function verDetalhes(id) {
   }
   if ((perms.tipoSolicitante || perms.tipoAdmin) && s.status === 'Rascunho Pendente') {
     ft += `<button class="btn btn-success" onclick="fecharModal(event);aprovarRascunho('${s.solicitacao_id}')">${ICONS.aprovarRascunho} Aprovar Rascunho</button>`;
+    ft += `<button class="btn btn-danger" onclick="fecharModal(event);abrirReprovarRascunhoModal('${s.solicitacao_id}')">${ICONS.reprovarRascunho} Reprovar Rascunho</button>`;
   }
   if (perms.tipoFinanceiro && s.status === 'Pagamento Programado') {
     if (s.tipo === 'CREA') {
@@ -2085,6 +2089,51 @@ async function aprovarRascunho(id) {
   }
 }
 
+function abrirReprovarRascunhoModal(id) {
+  const s = AppState.solicitacoes.find(x => x.solicitacao_id === id);
+  if (!s) return;
+  const mb = document.getElementById('reprovarRascunhoModalBody');
+  const mf = document.getElementById('reprovarRascunhoModalFooter');
+  if (mb) mb.innerHTML = `
+    <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.8rem;">
+      O técnico receberá a reprovação com a justificativa e poderá emitir um novo rascunho com as alterações solicitadas.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Justificativa da Reprovação <span style="color:var(--orange)">*</span></label>
+      <textarea class="form-control" id="reprovarJustificativa" rows="4"
+        placeholder="Descreva as alterações necessárias para o rascunho..."></textarea>
+    </div>`;
+  if (mf) mf.innerHTML = `
+    <button class="btn btn-ghost" onclick="fecharReprovarRascunhoModal(event)">Cancelar</button>
+    <button class="btn btn-danger" onclick="salvarReprovacaoRascunho('${s.solicitacao_id}')">${ICONS.reprovarRascunho} Reprovar</button>`;
+  if (DOM.reprovarRascunhoModalOverlay) DOM.reprovarRascunhoModalOverlay.classList.add('active');
+}
+
+function fecharReprovarRascunhoModal(event) {
+  if (event) { event.preventDefault(); event.stopPropagation(); }
+  DOM.reprovarRascunhoModalOverlay?.classList.remove('active');
+}
+
+async function salvarReprovacaoRascunho(id) {
+  const justificativa = document.getElementById('reprovarJustificativa')?.value?.trim();
+  if (!justificativa) {
+    showToast('Informe a justificativa da reprovação.', 'error');
+    return;
+  }
+  try {
+    await atualizarSolicitacaoDB(id, { status: 'Processando', rascunho_justificativa: justificativa });
+    await adicionarHistoricoDB(id, 'Rascunho Reprovado', justificativa);
+    showToast('Rascunho reprovado. Técnico foi notificado para revisão.', 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
+    fecharReprovarRascunhoModal();
+  } catch(e) {
+    console.error('Erro ao reprovar rascunho:', e);
+    showToast('Erro ao reprovar rascunho.', 'error');
+  }
+}
+
 async function excluirSolicitacao(id) {
   const confirmou = await confirmarAcao(
     'Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.',
@@ -2232,7 +2281,8 @@ function configurarEventListeners() {
       'pagar': () => pagarSolicitacao(id),
       'assinar-art': () => assinarArt(id),
       'enviar-rascunho': () => enviarRascunho(id),
-      'aprovar-rascunho': () => aprovarRascunho(id)
+      'aprovar-rascunho': () => aprovarRascunho(id),
+      'reprovar-rascunho': () => abrirReprovarRascunhoModal(id)
     };
     if (ac[a]) ac[a]();
   });
@@ -2267,7 +2317,11 @@ function configurarEventListeners() {
   DOM.baixaModalOverlay?.addEventListener('click', e => {
     if (e.target === DOM.baixaModalOverlay) fecharBaixaModal();
   });
-  
+
+  DOM.reprovarRascunhoModalOverlay?.addEventListener('click', e => {
+    if (e.target === DOM.reprovarRascunhoModalOverlay) fecharReprovarRascunhoModal();
+  });
+
   // ✅ NOVO: Fechar modal de confirmação ao clicar fora
   const confirmOverlay = document.getElementById('confirmModalOverlay');
   if (confirmOverlay) {
@@ -2557,6 +2611,9 @@ window.toggleSenha = toggleSenha;
 window.encaminharAoFinanceiro = encaminharAoFinanceiro;
 window.enviarRascunho = enviarRascunho;
 window.aprovarRascunho = aprovarRascunho;
+window.abrirReprovarRascunhoModal = abrirReprovarRascunhoModal;
+window.fecharReprovarRascunhoModal = fecharReprovarRascunhoModal;
+window.salvarReprovacaoRascunho = salvarReprovacaoRascunho;
 
 // DEBUG Clockify — rode no console: debugClockify()
 window.debugClockify = async function() {
