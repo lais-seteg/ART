@@ -952,6 +952,22 @@ body::before {
   color: #82c8f0;
 }
 
+.sharepoint-info-label {
+  background: rgba(255,255,255,0.03) !important;
+  color: var(--text-muted, #888) !important;
+  cursor: default !important;
+  font-style: italic;
+  font-size: 0.8rem !important;
+  user-select: none;
+}
+
+.label-hint {
+  color: var(--accent-cyan, #00cfff);
+  font-size: 0.72em;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
 .clockify-suggestions {
   display: none;
   position: absolute;

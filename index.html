@@ -126,7 +126,12 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Nome do Técnico Responsável</label>
-                <input type="text" id="nomeTecnicoCREA" class="form-control" name="nomeTecnico" required placeholder="Ex.: Ana Silva">
+                <select id="nomeTecnicoCREA" class="form-control" name="nomeTecnico" required onchange="toggleOutrosTecnicoCREA(this.value)">
+                  <option value="">Selecione o técnico</option>
+                  <option value="EVELINE ANDRADE MESQUITA">EVELINE ANDRADE MESQUITA</option>
+                  <option value="EDMAR XIMENES">EDMAR XIMENES</option>
+                  <option value="OUTROS">OUTROS</option>
+                </select>
               </div>
               <div class="form-group">
                 <label class="form-label required">Estado</label>
@@ -140,6 +145,18 @@
                   <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
                   <option>SP</option><option>SE</option><option>TO</option>
                 </select>
+              </div>
+              <div id="outrosTecnicoContainerCREA" class="form-group full-width hidden">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label required">Nome do Outro Técnico</label>
+                    <input type="text" id="outrosTecnicoNomeCREA" class="form-control" name="outrosTecnicoNome" required placeholder="Nome completo do técnico">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label required">Justificativa</label>
+                    <textarea id="outrosTecnicoJustificativaCREA" class="form-control" name="outrosTecnicoJustificativa" rows="2" required placeholder="Justificativa para uso de outro técnico"></textarea>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -237,14 +254,18 @@
             <h4 class="form-subtitle">📁 Arquivos Finais</h4>
             <div class="form-grid">
               <div class="form-group full-width">
-                <label class="form-label required">Local do Boleto/ART/Documentos</label>
+                <label class="form-label">📌 Pasta Geral de ARTs — Informativo</label>
                 <div class="link-field-wrapper">
-                  <input type="text" id="diretorioArquivoCREA" class="form-control" name="diretorioArquivo" required readonly value="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR">
+                  <span class="form-control sharepoint-info-label">Gestão de ARTs – ADMINISTRATIVO SETEG</span>
                   <a href="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR" target="_blank" rel="noopener" class="btn-link-open" title="Abrir pasta no SharePoint">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     Abrir
                   </a>
                 </div>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label">Local Específico da ART emitida <small class="label-hint">(preenchido pelo líder após emissão)</small></label>
+                <input type="text" id="localArtEspecificaCREA" class="form-control" name="localArtEspecifica" placeholder="Cole aqui o link ou caminho da ART específica">
               </div>
               <div class="form-group full-width">
                 <label class="form-label">Observações sobre documentos</label>
@@ -305,7 +326,13 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label required">Nome do Técnico Responsável</label>
-                <input type="text" id="nomeTecnicoCRBio" class="form-control" name="nomeTecnico" required placeholder="Ex.: Ana Silva">
+                <select id="nomeTecnicoCRBio" class="form-control" name="nomeTecnico" required>
+                  <option value="">Selecione o técnico</option>
+                  <option value="MATHEUS FONTENELLE">MATHEUS FONTENELLE</option>
+                  <option value="MATHEUS HADDAD">MATHEUS HADDAD</option>
+                  <option value="HUGO FERNANDES">HUGO FERNANDES</option>
+                  <option value="GUSTAVO TOLEDO">GUSTAVO TOLEDO</option>
+                </select>
               </div>
               <div class="form-group">
                 <label class="form-label required">Estado</label>
@@ -428,14 +455,18 @@
             <h4 class="form-subtitle">📁 Arquivos Finais</h4>
             <div class="form-grid">
               <div class="form-group full-width">
-                <label class="form-label required">Local do Boleto/ART</label>
+                <label class="form-label">📌 Pasta Geral de ARTs — Informativo</label>
                 <div class="link-field-wrapper">
-                  <input type="text" id="diretorioArquivoCRBIO" class="form-control" name="diretorioArquivo" required readonly value="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR">
+                  <span class="form-control sharepoint-info-label">Gestão de ARTs – ADMINISTRATIVO SETEG</span>
                   <a href="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR" target="_blank" rel="noopener" class="btn-link-open" title="Abrir pasta no SharePoint">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     Abrir
                   </a>
                 </div>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label">Local Específico da ART emitida <small class="label-hint">(preenchido pelo líder após emissão)</small></label>
+                <input type="text" id="localArtEspecificaCRBIO" class="form-control" name="localArtEspecifica" placeholder="Cole aqui o link ou caminho da ART específica">
               </div>
               <div class="form-group full-width">
                 <label class="form-label">Observações sobre documentos</label>

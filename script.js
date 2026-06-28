@@ -913,6 +913,21 @@ function fecharFormulario() {
   }, 300);
 }
 
+// ========== TÉCNICO OUTROS (CREA) ==========
+function toggleOutrosTecnicoCREA(value) {
+  const container = document.getElementById('outrosTecnicoContainerCREA');
+  if (!container) return;
+  if (value === 'OUTROS') {
+    container.classList.remove('hidden');
+  } else {
+    container.classList.add('hidden');
+    const nomeEl = document.getElementById('outrosTecnicoNomeCREA');
+    const justEl = document.getElementById('outrosTecnicoJustificativaCREA');
+    if (nomeEl) nomeEl.value = '';
+    if (justEl) justEl.value = '';
+  }
+}
+
 // ========== ATIVIDADES CREA ==========
 function limparAtividadesCREA() {
   if (DOM.atividadesCREAContainer) {
@@ -1120,6 +1135,12 @@ function coletarDadosFormulario(tipo) {
     d.atividades = coletarAtividadesCREA();
     const rascunho = p.querySelector('input[name="rascunhoARTCREA"]:checked');
     if (rascunho) d.rascunho_art = rascunho.value;
+    if (d.nomeTecnico === 'OUTROS') {
+      const nomeEl = document.getElementById('outrosTecnicoNomeCREA');
+      const justEl = document.getElementById('outrosTecnicoJustificativaCREA');
+      if (nomeEl) d.outrosTecnicoNome = escapeHtml(nomeEl.value.trim());
+      if (justEl) d.outrosTecnicoJustificativa = escapeHtml(justEl.value.trim());
+    }
   }
   
   return d;
@@ -1506,6 +1527,8 @@ async function verDetalhes(id) {
       <div class="detail-item"><span class="detail-label">Nome do Técnico</span><span class="detail-value">${sf(s.nomeTecnico)}</span></div>
       <div class="detail-item"><span class="detail-label">Estado (UF)</span><span class="detail-value">${sf(s.estado)}</span></div>
       ${s.tecnico_responsavel ? `<div class="detail-item"><span class="detail-label">Atribuído</span><span class="detail-value">${sf(s.tecnico_responsavel)}</span></div>` : ''}
+      ${s.outrosTecnicoNome ? `<div class="detail-item full-width"><span class="detail-label">Outro Técnico</span><span class="detail-value">${sf(s.outrosTecnicoNome)}</span></div>` : ''}
+      ${s.outrosTecnicoJustificativa ? `<div class="detail-item full-width"><span class="detail-label">Justificativa (Outro Técnico)</span><span class="detail-value">${sf(s.outrosTecnicoJustificativa)}</span></div>` : ''}
     </div>`;
 
   // ── Vínculo ACMB (CRBio) ───────────────────────────────────
@@ -1577,7 +1600,8 @@ async function verDetalhes(id) {
   h += `
     <div class="detail-section-title">📁 Arquivos Finais</div>
     <div class="detail-grid">
-      <div class="detail-item full-width"><span class="detail-label">Local do Boleto / ART / Documentos</span><span class="detail-value">${s.diretorioArquivo ? `<a href="${escapeHtml(s.diretorioArquivo)}" target="_blank" rel="noopener" class="detail-link">${escapeHtml(s.diretorioArquivo)}</a>` : '—'}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Pasta Geral de ARTs</span><span class="detail-value"><a href="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR" target="_blank" rel="noopener" class="detail-link">Gestão de ARTs – ADMINISTRATIVO SETEG</a></span></div>
+      ${s.localArtEspecifica ? `<div class="detail-item full-width"><span class="detail-label">Local Específico da ART</span><span class="detail-value"><a href="${escapeHtml(s.localArtEspecifica)}" target="_blank" rel="noopener" class="detail-link">${escapeHtml(s.localArtEspecifica)}</a></span></div>` : '<div class="detail-item full-width"><span class="detail-label">Local Específico da ART</span><span class="detail-value" style="color:var(--text-muted,#666)">Não preenchido pelo líder</span></div>'}
       ${s.obsDocumentos ? `<div class="detail-item full-width"><span class="detail-label">Observações sobre Documentos</span><span class="detail-value">${sf(s.obsDocumentos)}</span></div>` : ''}
     </div>`;
 
@@ -2224,6 +2248,8 @@ function configurarEventListeners() {
     setTimeout(() => {
       document.querySelectorAll('.form-control.error').forEach(el => el.classList.remove('error'));
       limparAtividadesCREA();
+      const outrosContainer = document.getElementById('outrosTecnicoContainerCREA');
+      if (outrosContainer) outrosContainer.classList.add('hidden');
     }, 10);
   });
   
@@ -2625,6 +2651,7 @@ window.aprovarRascunho = aprovarRascunho;
 window.abrirReprovarRascunhoModal = abrirReprovarRascunhoModal;
 window.fecharReprovarRascunhoModal = fecharReprovarRascunhoModal;
 window.salvarReprovacaoRascunho = salvarReprovacaoRascunho;
+window.toggleOutrosTecnicoCREA = toggleOutrosTecnicoCREA;
 
 // DEBUG Clockify — rode no console: debugClockify()
 window.debugClockify = async function() {
