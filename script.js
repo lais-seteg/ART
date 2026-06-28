@@ -129,7 +129,9 @@ const ICONS = {
   finalizar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   confirmarBaixa: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>`,
   pagar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
-  assinar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/><polyline points="17 8 20 11"/></svg>`
+  assinar: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/><polyline points="17 8 20 11"/></svg>`,
+  enviarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>`,
+  aprovarRascunho: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`
 };
 
 const ATIVIDADES_PROFISSIONAIS = [
@@ -148,8 +150,8 @@ const ATIVIDADES_PROFISSIONAIS = [
 
 // ✅ NOVO: Status permitidos por perfil
 const STATUS_POR_PERFIL = {
-  admin: ['Na fila', 'Processando', 'Ajuste Pendente', 'Pagamento Programado', 'Pago', 'ART Assinada', 'Finalizado', 'Baixa Solicitada', 'Baixa da ART'],
-  tecnico: ['Processando', 'Ajuste Pendente', 'Pagamento Programado', 'Baixa Solicitada', 'Baixa da ART', 'Finalizado'],
+  admin: ['Na fila', 'Processando', 'Rascunho Pendente', 'Ajuste Pendente', 'Pagamento Programado', 'Pago', 'ART Assinada', 'Finalizado', 'Baixa Solicitada', 'Baixa da ART'],
+  tecnico: ['Processando', 'Rascunho Pendente', 'Ajuste Pendente', 'Pagamento Programado', 'Baixa Solicitada', 'Baixa da ART', 'Finalizado'],
   financeiro: ['Pago', 'ART Assinada', 'Finalizado']
 };
 
@@ -194,6 +196,7 @@ function getStatusClass(s) {
   const m = {
     'Na fila': 'status-na-fila',
     'Processando': 'status-processando',
+    'Rascunho Pendente': 'status-rascunho',
     'Ajuste Pendente': 'status-ajuste',
     'Pagamento Programado': 'status-pagamento',
     'Pago': 'status-pago',
@@ -1096,10 +1099,14 @@ function coletarDadosFormulario(tipo) {
   if (tipo === 'CRBio') {
     const vinc = document.querySelector('input[name="vinculadoACMB"]:checked');
     if (vinc) d.vinculado_acmb = vinc.value;
+    const rascunho = p.querySelector('input[name="rascunhoARTCRBio"]:checked');
+    if (rascunho) d.rascunho_art = rascunho.value;
   }
-  
+
   if (tipo === 'CREA') {
     d.atividades = coletarAtividadesCREA();
+    const rascunho = p.querySelector('input[name="rascunhoARTCREA"]:checked');
+    if (rascunho) d.rascunho_art = rascunho.value;
   }
   
   return d;
@@ -1293,12 +1300,19 @@ function renderTableRow(s, perms) {
     if (statusAtivos && perms.podeEncaminharFinanceiro) {
       a += `<button class="btn btn-ghost-sm btn-encaminhar" data-action="encaminhar-financeiro" data-id="${s.solicitacao_id}" title="Enviar para o Financeiro">${ICONS.encaminhar}</button>`;
     }
-    if (!['Finalizado', 'Baixa Solicitada', 'Baixa da ART'].includes(s.status)) {
+    if (s.rascunho_art === 'sim' && s.status === 'Processando') {
+      a += `<button class="btn btn-ghost-sm" data-action="enviar-rascunho" data-id="${s.solicitacao_id}" title="Enviar Rascunho para Aprovação">${ICONS.enviarRascunho}</button>`;
+    }
+    if (!['Finalizado', 'Baixa Solicitada', 'Baixa da ART', 'Rascunho Pendente'].includes(s.status)) {
       a += `<button class="btn btn-ghost-sm" data-action="finalizar" data-id="${s.solicitacao_id}" title="Finalizar">${ICONS.finalizar}</button>`;
     }
     if (s.status === 'Baixa Solicitada') {
       a += `<button class="btn btn-ghost-sm" data-action="confirmar-baixa" data-id="${s.solicitacao_id}" title="Confirmar Baixa da ART">${ICONS.confirmarBaixa}</button>`;
     }
+  }
+
+  if ((perms.tipoSolicitante || perms.tipoAdmin) && s.status === 'Rascunho Pendente') {
+    a += `<button class="btn btn-ghost-sm" data-action="aprovar-rascunho" data-id="${s.solicitacao_id}" title="Aprovar Rascunho da ART">${ICONS.aprovarRascunho}</button>`;
   }
 
   if (perms.tipoFinanceiro) {
@@ -1465,6 +1479,7 @@ async function verDetalhes(id) {
     <div class="detail-grid">
       <div class="detail-item full-width"><span class="detail-label">Nome do Empreendimento</span><span class="detail-value">${sf(s.nomeEmpreendimento)}</span></div>
       <div class="detail-item"><span class="detail-label">Código Clockify</span><span class="detail-value">${sf(s.codigoClockfy)}</span></div>
+      <div class="detail-item"><span class="detail-label">Rascunho da ART para validação?</span><span class="detail-value">${s.rascunho_art === 'sim' ? 'Sim' : s.rascunho_art === 'nao' ? 'Não' : '—'}</span></div>
     </div>
 
     <!-- ── Informações do Técnico ── -->
@@ -1533,7 +1548,7 @@ async function verDetalhes(id) {
   h += `
     <div class="detail-section-title">📁 Arquivos Finais</div>
     <div class="detail-grid">
-      <div class="detail-item full-width"><span class="detail-label">Local do Boleto / ART / Documentos</span><span class="detail-value">${sf(s.diretorioArquivo)}</span></div>
+      <div class="detail-item full-width"><span class="detail-label">Local do Boleto / ART / Documentos</span><span class="detail-value">${s.diretorioArquivo ? `<a href="${escapeHtml(s.diretorioArquivo)}" target="_blank" rel="noopener" style="color:#5aafe0;text-decoration:underline;">${escapeHtml(s.diretorioArquivo)}</a>` : '—'}</span></div>
       <div class="detail-item full-width"><span class="detail-label">Observações sobre Documentos</span><span class="detail-value">${sf(s.obsDocumentos)}</span></div>
     </div>`;
 
@@ -1585,7 +1600,10 @@ async function verDetalhes(id) {
     if (statusAtivos && perms.podeEncaminharFinanceiro) {
       ft += `<button class="btn btn-secondary" onclick="fecharModal(event);encaminharAoFinanceiro('${s.solicitacao_id}')">${ICONS.encaminhar} Enc. Financeiro</button>`;
     }
-    if (!['Finalizado','Baixa Solicitada','Baixa da ART'].includes(s.status)) {
+    if (s.rascunho_art === 'sim' && s.status === 'Processando') {
+      ft += `<button class="btn btn-primary" onclick="fecharModal(event);enviarRascunho('${s.solicitacao_id}')">${ICONS.enviarRascunho} Enviar Rascunho</button>`;
+    }
+    if (!['Finalizado','Baixa Solicitada','Baixa da ART','Rascunho Pendente'].includes(s.status)) {
       ft += `<button class="btn btn-success" onclick="fecharModal(event);finalizarSolicitacao('${s.solicitacao_id}')">${ICONS.finalizar} Finalizar</button>`;
       ft += `<button class="btn btn-warning" onclick="fecharModal(event);abrirAjusteModal('${s.solicitacao_id}')">${ICONS.ajuste} Solicitar Ajuste</button>`;
     }
@@ -1598,6 +1616,9 @@ async function verDetalhes(id) {
   }
   if ((perms.tipoSolicitante || perms.tipoAdmin) && s.status === 'Ajuste Pendente') {
     ft += `<button class="btn btn-success" onclick="fecharModal(event);ajusteRealizado('${s.solicitacao_id}')">${ICONS.finalizar} Ajuste Realizado</button>`;
+  }
+  if ((perms.tipoSolicitante || perms.tipoAdmin) && s.status === 'Rascunho Pendente') {
+    ft += `<button class="btn btn-success" onclick="fecharModal(event);aprovarRascunho('${s.solicitacao_id}')">${ICONS.aprovarRascunho} Aprovar Rascunho</button>`;
   }
   if (perms.tipoFinanceiro && s.status === 'Pagamento Programado') {
     if (s.tipo === 'CREA') {
@@ -2020,6 +2041,34 @@ async function assinarArt(id) {
   }
 }
 
+async function enviarRascunho(id) {
+  try {
+    await atualizarSolicitacaoDB(id, { status: 'Rascunho Pendente' });
+    await adicionarHistoricoDB(id, 'Rascunho Pendente', `Rascunho enviado para aprovação por ${AppState.usuarioAtual?.nome || 'Técnico'}`);
+    showToast('Rascunho enviado para aprovação!', 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
+  } catch(e) {
+    console.error('Erro ao enviar rascunho:', e);
+    showToast('Erro ao enviar rascunho para aprovação.', 'error');
+  }
+}
+
+async function aprovarRascunho(id) {
+  try {
+    await atualizarSolicitacaoDB(id, { status: 'Processando' });
+    await adicionarHistoricoDB(id, 'Rascunho Aprovado', `Rascunho aprovado por ${AppState.usuarioAtual?.nome || 'Solicitante'}`);
+    showToast('Rascunho aprovado! Técnico pode continuar.', 'success');
+    AppState.solicitacoes = await carregarSolicitacoesDB();
+    renderizarTabela();
+    atualizarKPIs();
+  } catch(e) {
+    console.error('Erro ao aprovar rascunho:', e);
+    showToast('Erro ao aprovar rascunho.', 'error');
+  }
+}
+
 async function excluirSolicitacao(id) {
   const confirmou = await confirmarAcao(
     'Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.',
@@ -2165,7 +2214,9 @@ function configurarEventListeners() {
       'finalizar': () => finalizarSolicitacao(id),
       'confirmar-baixa': () => confirmarBaixaART(id),
       'pagar': () => pagarSolicitacao(id),
-      'assinar-art': () => assinarArt(id)
+      'assinar-art': () => assinarArt(id),
+      'enviar-rascunho': () => enviarRascunho(id),
+      'aprovar-rascunho': () => aprovarRascunho(id)
     };
     if (ac[a]) ac[a]();
   });
@@ -2488,6 +2539,8 @@ window.verDetalhes = verDetalhes;
 window.consultarTabelaAtividades = consultarTabelaAtividades;
 window.toggleSenha = toggleSenha;
 window.encaminharAoFinanceiro = encaminharAoFinanceiro;
+window.enviarRascunho = enviarRascunho;
+window.aprovarRascunho = aprovarRascunho;
 
 // DEBUG Clockify — rode no console: debugClockify()
 window.debugClockify = async function() {

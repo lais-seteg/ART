@@ -111,6 +111,13 @@
                 <label class="form-label required">Código do Clockify</label>
                 <input type="text" id="codigoClockfyCREA" class="form-control" name="codigoClockfy" required readonly placeholder="Código do projeto (preenchido automaticamente)">
               </div>
+              <div class="form-group full-width">
+                <label class="form-label">É necessário rascunho da ART para validação?</label>
+                <div class="radio-group">
+                  <label><input type="radio" name="rascunhoARTCREA" value="sim"> Sim</label>
+                  <label><input type="radio" name="rascunhoARTCREA" value="nao"> Não</label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -231,7 +238,13 @@
             <div class="form-grid">
               <div class="form-group full-width">
                 <label class="form-label required">Local do Boleto/ART/Documentos</label>
-                <input type="text" id="diretorioArquivoCREA" class="form-control" name="diretorioArquivo" required placeholder="Z:\servidor\arts\2026\boleto.pdf">
+                <div class="link-field-wrapper">
+                  <input type="text" id="diretorioArquivoCREA" class="form-control" name="diretorioArquivo" required readonly value="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR">
+                  <a href="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR" target="_blank" rel="noopener" class="btn-link-open" title="Abrir pasta no SharePoint">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Abrir
+                  </a>
+                </div>
               </div>
               <div class="form-group full-width">
                 <label class="form-label">Observações sobre documentos</label>
@@ -276,6 +289,13 @@
               <div class="form-group full-width">
                 <label class="form-label required">Código do Clockify</label>
                 <input type="text" id="codigoClockfyCRBio" class="form-control" name="codigoClockfy" required readonly placeholder="Código do projeto (preenchido automaticamente)">
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label">É necessário rascunho da ART para validação?</label>
+                <div class="radio-group">
+                  <label><input type="radio" name="rascunhoARTCRBio" value="sim"> Sim</label>
+                  <label><input type="radio" name="rascunhoARTCRBio" value="nao"> Não</label>
+                </div>
               </div>
             </div>
           </div>
@@ -409,7 +429,13 @@
             <div class="form-grid">
               <div class="form-group full-width">
                 <label class="form-label required">Local do Boleto/ART</label>
-                <input type="text" id="diretorioArquivoCRBIO" class="form-control" name="diretorioArquivo" required placeholder="Z:\servidor\arts\2026\boleto.pdf">
+                <div class="link-field-wrapper">
+                  <input type="text" id="diretorioArquivoCRBIO" class="form-control" name="diretorioArquivo" required readonly value="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR">
+                  <a href="https://setegadministrador.sharepoint.com/:u:/r/sites/ADMINISTRATIVOSETEG-GESTAOART/SitePages/Home.aspx?csf=1&web=1&e=w5QSvR" target="_blank" rel="noopener" class="btn-link-open" title="Abrir pasta no SharePoint">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Abrir
+                  </a>
+                </div>
               </div>
               <div class="form-group full-width">
                 <label class="form-label">Observações sobre documentos</label>

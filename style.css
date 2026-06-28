@@ -625,6 +625,8 @@ body::before {
 .status-baixa-art { background: rgba(108,52,131,0.18); color: #C39BD3; border-color: rgba(108,52,131,0.4); }
 /* ART Assinada → Teal/verde-azulado */
 .status-art-assinada { background: rgba(0,150,136,0.12); color: #00897B; border-color: rgba(0,150,136,0.35); }
+/* Rascunho Pendente → Amarelo mostarda */
+.status-rascunho { background: rgba(212,160,23,0.12); color: #D4A017; border-color: rgba(212,160,23,0.4); }
 
 .conselho-badge {
   display: inline-block;
@@ -864,6 +866,39 @@ body::before {
 .clockify-input-wrapper {
   position: relative;
   width: 100%;
+}
+
+.link-field-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+.link-field-wrapper .form-control {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+.btn-link-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: rgba(46,134,193,0.15);
+  color: #5aafe0;
+  border: 1px solid rgba(46,134,193,0.3);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.btn-link-open:hover {
+  background: rgba(46,134,193,0.28);
+  color: #82c8f0;
 }
 
 .clockify-suggestions {
