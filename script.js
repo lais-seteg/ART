@@ -913,6 +913,20 @@ function fecharFormulario() {
   }, 300);
 }
 
+// ========== LINK DINÂMICO LOCAL DA ART ==========
+function atualizarLinkArt(tipo, value) {
+  const link = document.getElementById(`linkAbrirArt${tipo}`);
+  if (!link) return;
+  const isUrl = value && /^https?:\/\//i.test(value.trim());
+  if (isUrl) {
+    link.href = value.trim();
+    link.classList.remove('hidden');
+  } else {
+    link.href = '#';
+    link.classList.add('hidden');
+  }
+}
+
 // ========== TÉCNICO OUTROS (CREA) ==========
 function toggleOutrosTecnicoCREA(value) {
   const container = document.getElementById('outrosTecnicoContainerCREA');
@@ -2250,6 +2264,10 @@ function configurarEventListeners() {
       limparAtividadesCREA();
       const outrosContainer = document.getElementById('outrosTecnicoContainerCREA');
       if (outrosContainer) outrosContainer.classList.add('hidden');
+      ['CREA', 'CRBIO'].forEach(t => {
+        const l = document.getElementById(`linkAbrirArt${t}`);
+        if (l) { l.href = '#'; l.classList.add('hidden'); }
+      });
     }, 10);
   });
   
@@ -2652,6 +2670,7 @@ window.abrirReprovarRascunhoModal = abrirReprovarRascunhoModal;
 window.fecharReprovarRascunhoModal = fecharReprovarRascunhoModal;
 window.salvarReprovacaoRascunho = salvarReprovacaoRascunho;
 window.toggleOutrosTecnicoCREA = toggleOutrosTecnicoCREA;
+window.atualizarLinkArt = atualizarLinkArt;
 
 // DEBUG Clockify — rode no console: debugClockify()
 window.debugClockify = async function() {

@@ -264,8 +264,14 @@
                 </div>
               </div>
               <div class="form-group full-width">
-                <label class="form-label">Local Específico da ART emitida <small class="label-hint">(preenchido pelo líder após emissão)</small></label>
-                <input type="text" id="localArtEspecificaCREA" class="form-control" name="localArtEspecifica" placeholder="Cole aqui o link ou caminho da ART específica">
+                <label class="form-label required">Local Específico da ART emitida <small class="label-hint">(preenchido pelo líder após emissão)</small></label>
+                <div class="link-field-wrapper">
+                  <input type="text" id="localArtEspecificaCREA" class="form-control" name="localArtEspecifica" required placeholder="Cole aqui o link da ART específica" oninput="atualizarLinkArt('CREA', this.value)">
+                  <a id="linkAbrirArtCREA" href="#" target="_blank" rel="noopener" class="btn-link-open hidden" title="Abrir link da ART">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Abrir
+                  </a>
+                </div>
               </div>
               <div class="form-group full-width">
                 <label class="form-label">Observações sobre documentos</label>
@@ -465,8 +471,14 @@
                 </div>
               </div>
               <div class="form-group full-width">
-                <label class="form-label">Local Específico da ART emitida <small class="label-hint">(preenchido pelo líder após emissão)</small></label>
-                <input type="text" id="localArtEspecificaCRBIO" class="form-control" name="localArtEspecifica" placeholder="Cole aqui o link ou caminho da ART específica">
+                <label class="form-label required">Local Específico da ART emitida <small class="label-hint">(preenchido pelo líder após emissão)</small></label>
+                <div class="link-field-wrapper">
+                  <input type="text" id="localArtEspecificaCRBIO" class="form-control" name="localArtEspecifica" required placeholder="Cole aqui o link da ART específica" oninput="atualizarLinkArt('CRBIO', this.value)">
+                  <a id="linkAbrirArtCRBIO" href="#" target="_blank" rel="noopener" class="btn-link-open hidden" title="Abrir link da ART">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Abrir
+                  </a>
+                </div>
               </div>
               <div class="form-group full-width">
                 <label class="form-label">Observações sobre documentos</label>
